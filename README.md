@@ -6,7 +6,7 @@ A customizable Matrix-style terminal screensaver for ZSH.
 
 ### Using zinit
 ```zsh
-zinit light username/zsh-matrix-screensaver
+zinit light mazewalker/zsh-matrix-screensaver
 ```
 
 ### Configuration
