@@ -76,7 +76,7 @@ draw_matrix() {
     local i j char
     clear
     
-    for i in "${!streams[@]}"; do
+    for i in "${(k)streams}"; do
         local stream=${streams[$i]}
         local pos=${positions[$i]}
         local len=${#stream}
