@@ -35,11 +35,10 @@ CHARS=(ｱ ｲ ｳ ｴ ｵ ｶ ｷ ｸ ｹ ｺ ｻ ｼ ｽ ｾ ｿ ﾀ ﾁ ﾂ �
 init_streams() {
     local i
     for ((i=0; i<TERM_WIDTH; i++)); do
-        if (( RANDOM % 3 == 0 )); then
-            streams[$i]=""
-            speeds[$i]=$((RANDOM % 3 + 1))
-            positions[$i]=0
-        fi
+        # Initialize all columns, with random starting positions
+        streams[$i]=""
+        speeds[$i]=$((RANDOM % 3 + 1))
+        positions[$i]=$((RANDOM % TERM_HEIGHT * -1)) # Random starting positions above screen
     done
 }
 
@@ -52,9 +51,13 @@ update_streams() {
         
         # Reset stream if it reaches bottom
         if ((positions[$i] >= TERM_HEIGHT)); then
-            positions[$i]=0
-            speeds[$i]=$((RANDOM % 3 + 1))
-            streams[$i]=""
+            if ((RANDOM % 10 == 0)); then  # 10% chance to restart
+                positions[$i]=$((RANDOM % TERM_HEIGHT * -1))
+                speeds[$i]=$((RANDOM % 3 + 1))
+                streams[$i]=""
+            else
+                positions[$i]=0
+            fi
         fi
         
         # Add new character to stream
