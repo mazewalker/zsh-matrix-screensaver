@@ -35,7 +35,6 @@ CHARS=(ｱ ｲ ｳ ｴ ｵ ｶ ｷ ｸ ｹ ｺ ｻ ｼ ｽ ｾ ｿ ﾀ ﾁ ﾂ �
 init_streams() {
     local i
     for ((i=0; i<TERM_WIDTH; i++)); do
-        # Initialize all columns, with random starting positions
         streams[$i]=""
         speeds[$i]=$((RANDOM % 3 + 1))
         positions[$i]=$((RANDOM % TERM_HEIGHT * -1)) # Random starting positions above screen
@@ -46,12 +45,9 @@ init_streams() {
 update_streams() {
     local i char
     for i in "${(k)streams}"; do
-        # Update position
         ((positions[$i]+=speeds[$i]))
-        
-        # Reset stream if it reaches bottom
         if ((positions[$i] >= TERM_HEIGHT)); then
-            if ((RANDOM % 10 == 0)); then  # 10% chance to restart
+            if ((RANDOM % 10 == 0)); then
                 positions[$i]=$((RANDOM % TERM_HEIGHT * -1))
                 speeds[$i]=$((RANDOM % 3 + 1))
                 streams[$i]=""
@@ -60,45 +56,39 @@ update_streams() {
             fi
         fi
         
-        # Add new character to stream
         char=${CHARS[$RANDOM % ${#CHARS[@]}]}
         streams[$i]+="$char"
         
-        # Trim stream if too long
         if ((${#streams[$i]} > TERM_HEIGHT)); then
             streams[$i]=${streams[$i]:1}
         fi
     done
 }
 
-# Draw matrix effect
+# Draw matrix effect (without clearing the screen)
 draw_matrix() {
     local i j char
-    clear
+
+    # Move cursor to top-left instead of clearing the screen
+    tput cup 0 0
     
     for i in "${(k)streams}"; do
         local stream=${streams[$i]}
         local pos=${positions[$i]}
         local len=${#stream}
-        
-        # Draw each character in the stream with different intensities
         for ((j=0; j<len; j++)); do
             local y=$((pos-j))
             if ((y >= 0 && y < TERM_HEIGHT)); then
                 char=${stream:j:1}
-                
-                # First character (bright white)
                 if ((j == 0)); then
                     tput cup $y $i
                     echo -en "\033[1;37m$char"
-                # Next few characters (bright green)
                 elif ((j < 3)); then
                     tput cup $y $i
                     echo -en "\033[1;32m$char"
-                # Rest of characters (dark green, fading)
                 else
                     local fade=$((j * 2))
-                    if ((fade > 7)); then fade=7; fi
+                    (( fade > 7 )) && fade=7
                     tput cup $y $i
                     echo -en "\033[0;32m$char"
                 fi
@@ -107,16 +97,13 @@ draw_matrix() {
     done
 }
 
-# Main loop
 init_streams
 
 while true; do
-    # Exit screensaver if any key is pressed
     if read -t 0 -n 1 key; then
         cleanup
     fi
 
-    # Check if terminal size changed
     local new_width=$(tput cols)
     local new_height=$(tput rows)
     
@@ -129,6 +116,5 @@ while true; do
     update_streams
     draw_matrix
     
-    # Control animation speed
     sleep 0.1
 done
