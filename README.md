@@ -1,14 +1,3 @@
-# Directory structure:
-#
-# zsh-matrix-screensaver/
-# ├── README.md
-# ├── zsh-matrix-screensaver.plugin.zsh
-# ├── bin/
-# │   └── matrix-screensaver
-# └── LICENSE
-
-# README.md
----------------
 # ZSH Matrix Screensaver
 
 A customizable Matrix-style terminal screensaver for ZSH.
