@@ -23,15 +23,14 @@ tput civis
 TERM_WIDTH=$(tput cols)
 TERM_HEIGHT=$(tput rows)
 
-# Initialize streams array
-declare -A streams
-declare -A speeds
-declare -A positions
-
+# Initialize arrays
+typeset -A matrix_data
+typeset -a streams speeds positions
 # Matrix characters (expanded set)
 CHARS=(ｱ ｲ ｳ ｴ ｵ ｶ ｷ ｸ ｹ ｺ ｻ ｼ ｽ ｾ ｿ ﾀ ﾁ ﾂ ﾃ ﾄ ﾅ ﾆ ﾇ ﾈ ﾉ ﾊ ﾋ ﾌ ﾍ ﾎ ﾏ ﾐ ﾑ ﾒ ﾓ ﾔ ﾕ ﾖ ﾗ ﾘ ﾙ ﾚ ﾛ ﾜ ﾝ 0 1 2 3 4 5 6 7 8 9 @ # $ % & * + - = ? !)
 
 # Initialize matrix streams
+# trunk-ignore(shfmt/parse)
 init_streams() {
     local i
     for ((i=0; i<TERM_WIDTH; i++)); do
@@ -39,6 +38,9 @@ init_streams() {
             streams[$i]=""
             speeds[$i]=$((RANDOM % 3 + 1))
             positions[$i]=0
+            matrix_data[$i,stream]=""
+            matrix_data[$i,speed]=$((RANDOM % 3 + 1))
+            matrix_data[$i,position]=0
         fi
     done
 }
@@ -51,22 +53,22 @@ update_streams() {
         ((positions[$i]+=speeds[$i]))
         
         # Reset stream if it reaches bottom
-        if ((positions[$i] >= TERM_HEIGHT)); then
-            positions[$i]=0
-            speeds[$i]=$((RANDOM % 3 + 1))
-            streams[$i]=""
-        fi
+        ((matrix_data[$i,position]+=matrix_data[$i,speed]))
         
-        # Add new character to stream
+        # Reset stream if it reaches bottom
+        if ((matrix_data[$i,position] >= TERM_HEIGHT)); then
+            matrix_data[$i,position]=0
+            matrix_data[$i,speed]=$((RANDOM % 3 + 1))
+            matrix_data[$i,stream]=""
         char=${CHARS[$RANDOM % ${#CHARS[@]}]}
         streams[$i]+="$char"
         
         # Trim stream if too long
-        if ((${#streams[$i]} > TERM_HEIGHT)); then
-            streams[$i]=${streams[$i]:1}
-        fi
-    done
-}
+        matrix_data[$i,stream]+="$char"
+
+        # Trim stream if too long
+        if ((${#matrix_data[$i,stream]} > TERM_HEIGHT)); then
+            matrix_data[$i,stream]=${matrix_data[$i,stream]:1}
 
 # Draw matrix effect
 draw_matrix() {
@@ -76,9 +78,11 @@ draw_matrix() {
     for i in "${!streams[@]}"; do
         local stream=${streams[$i]}
         local pos=${positions[$i]}
-        local len=${#stream}
-        
-        # Draw each character in the stream with different intensities
+    for i in "${(@k)matrix_data}"; do
+        [[ $i == *,stream ]] || continue
+        i=${i%,stream}
+        local stream=${matrix_data[$i,stream]}
+        local pos=${matrix_data[$i,position]}
         for ((j=0; j<len; j++)); do
             local y=$((pos-j))
             if ((y >= 0 && y < TERM_HEIGHT)); then
