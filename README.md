@@ -1,3 +1,4 @@
+[![Lint Code Base](https://github.com/mazewalker/zsh-matrix-screensaver/actions/workflows/super-linter.yml/badge.svg)](https://github.com/mazewalker/zsh-matrix-screensaver/actions/workflows/super-linter.yml)
 # ZSH Matrix Screensaver
 
 A customizable Matrix-style terminal screensaver for ZSH.
