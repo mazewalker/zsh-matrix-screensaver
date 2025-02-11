@@ -19,7 +19,6 @@ function start_screensaver() {
 # Function to reset TMOUT when input is detected
 function reset_idle_timer() {
     TMOUT=$SCREENSAVER_TIMEOUT
-    echo "Timer reset to $TMOUT seconds"
 }
 
 # Reset timer on any keypress
