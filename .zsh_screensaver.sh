@@ -10,25 +10,17 @@ function cleanup {
 
 trap cleanup INT TERM
 
-# Save current screen and hide cursor
+# Save current screen
 tput smcup
-tput civis
 
 # Get terminal size
 TERM_WIDTH=$(tput cols)
 TERM_HEIGHT=$(tput lines)
 
-printf "\033[?25l"  # Hide cursor
-printf "\033[2J"    # Clear screen
-printf "\033[?7l"   # Disable line wrap
-printf "\033[?47h"  # Use alternate screen buffer
-printf "Terminal width: $TERM_WIDTH"
-printf "Terminal height: $TERM_HEIGHT"
-
-# Initialize streams arrays using zsh's typeset
-typeset -A streams
-typeset -A speeds
-typeset -A positions
+# Initialize streams arrays
+declare -A streams
+declare -A speeds
+declare -A positions
 
 # Matrix characters (expanded set)
 CHARS=(ｱ ｲ ｳ ｴ ｵ ｶ ｷ ｸ ｹ ｺ ｻ ｼ ｽ ｾ ｿ ﾀ ﾁ ﾂ ﾃ ﾄ ﾅ ﾆ ﾇ ﾈ ﾉ ﾊ ﾋ ﾌ ﾍ ﾎ ﾏ ﾐ ﾑ ﾒ ﾓ ﾔ ﾕ ﾖ ﾗ ﾘ ﾙ ﾚ ﾛ ﾜ ﾝ 0 1 2 3 4 5 6 7 8 9 @ # $ % & * + - = ? !)
@@ -58,8 +50,7 @@ function update_streams {
         char=${CHARS[$RANDOM % ${#CHARS[@]}]}
         streams[$i]+="$char"
         if ((${#streams[$i]} > TERM_HEIGHT)); then
-            # Use sed to trim the first character
-            streams[$i]=$(echo "${streams[$i]}" | sed 's/^.//')
+            streams[$i]="${streams[$i]:1}" # Use parameter expansion instead of sed
         fi
     done
 }
@@ -94,6 +85,12 @@ function draw_matrix {
 }
 
 init_streams
+
+# Hide cursor, clear screen, disable line wrap, use alternate screen buffer
+tput civis
+printf "\033[2J"    # Clear screen
+printf "\033[?7l"   # Disable line wrap
+printf "\033[?47h"  # Use alternate screen buffer
 
 while true; do
     # Exit immediately if any key is pressed
