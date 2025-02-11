@@ -1,17 +1,19 @@
 #!/bin/zsh
 
 function cleanup {
-    tput cnorm   # Show cursor
-    tput rmcup   # Restore screen
-    tput sgr0    # Reset colors
-    clear
+    printf "\033[?1049l"    # Return from alternate screen buffer
+    printf "\033[?7h"       # Re-enable line wrapping
+    tput cnorm             # Show cursor
+    tput sgr0             # Reset colors
     exit 0
 }
 
 trap cleanup INT TERM
 
-# Save current screen
-tput smcup
+# Switch to alternate screen buffer and save current screen
+printf "\033[?1049h"    # Switch to alternate screen buffer
+printf "\033[?7l"       # Disable line wrapping
+tput civis             # Hide cursor
 
 # Get terminal size
 TERM_WIDTH=$(tput cols)
