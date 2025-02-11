@@ -4,12 +4,14 @@ export SCREENSAVER_ENABLED=true
 
 # Idle detection using TMOUT
 function start_screensaver() {
-    # Don't trigger if there's ongoing output
+    echo "start_screensaver called"
     if [[ -n $(jobs) ]]; then
+        echo "Jobs are running, screensaver will not start"
         return
     fi
     
-    [[ $SCREENSAVER_ENABLED == true ]] || return
+    [[ $SCREENSAVER_ENABLED == true ]] || { echo "Screensaver is disabled"; return; }
+    echo "Starting screensaver"
     clear
     ~/.zsh_screensaver.sh
 }
