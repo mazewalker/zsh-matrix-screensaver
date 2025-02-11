@@ -22,5 +22,13 @@ The screensaver will automatically start after the configured idle timeout.
 - Toggle on/off: `export SCREENSAVER_ENABLED=true/false`
 - Adjust timeout: `export SCREENSAVER_TIMEOUT=300`
 
+## Uninstallation
+
+```zsh
+zinit unload mazewalker/zsh-matrix-screensaver    # (optional) Unload it from the current session
+zinit delete mazewalker/zsh-matrix-screensaver    # Delete it from disk
+zinit light mazewalker/zsh-matrix-screensaver     # Reinstall the plugin
+```
+
 ## License
 MIT License
