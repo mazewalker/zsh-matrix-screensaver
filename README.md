@@ -1,17 +1,21 @@
-[![Lint Code Base](https://github.com/mazewalker/zsh-matrix-screensaver/actions/workflows/super-linter.yml/badge.svg)](https://github.com/mazewalker/zsh-matrix-screensaver/actions/workflows/super-linter.yml)
 # ZSH Matrix Screensaver
+
+[![Lint Code Base](https://github.com/mazewalker/zsh-matrix-screensaver/actions/workflows/super-linter.yml/badge.svg)](https://github.com/mazewalker/zsh-matrix-screensaver/actions/workflows/super-linter.yml)
 
 A customizable Matrix-style terminal screensaver for ZSH.
 
 ## Installation
 
 ### Using zinit
+
 ```zsh
 zinit light mazewalker/zsh-matrix-screensaver
 ```
 
 ### Configuration
+
 Add to your `.zshrc`:
+
 ```zsh
 # Optional: customize settings
 export SCREENSAVER_TIMEOUT=300  # 5 minutes
@@ -19,7 +23,9 @@ export SCREENSAVER_ENABLED=true
 ```
 
 ## Usage
+
 The screensaver will automatically start after the configured idle timeout.
+
 - Toggle on/off: `export SCREENSAVER_ENABLED=true/false`
 - Adjust timeout: `export SCREENSAVER_TIMEOUT=300`
 
@@ -32,4 +38,5 @@ zinit light mazewalker/zsh-matrix-screensaver     # Reinstall the plugin
 ```
 
 ## License
+
 MIT License
