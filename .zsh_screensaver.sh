@@ -18,6 +18,13 @@ tput civis
 TERM_WIDTH=$(tput cols)
 TERM_HEIGHT=$(tput lines)
 
+printf "\033[?25l"  # Hide cursor
+printf "\033[2J"    # Clear screen
+printf "\033[?7l"   # Disable line wrap
+printf "\033[?47h"  # Use alternate screen buffer
+printf "Terminal width: $TERM_WIDTH"
+printf "Terminal height: $TERM_HEIGHT"
+
 # Initialize streams arrays using zsh's typeset
 typeset -A streams
 typeset -A speeds

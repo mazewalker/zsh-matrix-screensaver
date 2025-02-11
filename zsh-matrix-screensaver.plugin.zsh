@@ -22,15 +22,15 @@ function reset_idle_timer() {
 }
 
 # Reset timer on any keypress
-function zle-keymap-select zle-line-init zle-line-finish {
-    reset_idle_timer
-}
+#function zle-keymap-select zle-line-init zle-line-finish {
+#    reset_idle_timer
+#}
 
 # Hook into ZSH's input system
 autoload -Uz add-zsh-hook
-zle -N zle-line-init
-zle -N zle-keymap-select
-zle -N zle-line-finish
+#zle -N zle-line-init
+#zle -N zle-keymap-select
+#zle -N zle-line-finish
 
 # Set idle timeout
 TMOUT=$SCREENSAVER_TIMEOUT
