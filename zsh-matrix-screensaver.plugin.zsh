@@ -173,7 +173,7 @@ function start {
             draw_matrix
 
             # Small sleep to control frame rate
-            # sleep 0.03
+            sleep 0.03
         } || {
             debug_info "Caught error, continuing..."
             continue
@@ -181,7 +181,7 @@ function start {
     done
 }
 
-dle_timer() {
+function reset_idle_timer() {
     LAST_ACTIVITY=$(date +%s)
     TMOUT=$SCREENSAVER_TIMEOUT
     # Debug line to verify timer reset (optional, remove in production)
