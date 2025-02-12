@@ -18,7 +18,7 @@ Add to your `.zshrc`:
 
 ```zsh
 # Optional: customize settings
-export SCREENSAVER_TIMEOUT=300  # 5 minutes
+export SCREENSAVER_TIMEOUT=120  # 2 minutes
 export SCREENSAVER_ENABLED=true
 ```
 
