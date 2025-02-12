@@ -13,7 +13,7 @@ function start_screensaver() {
     [[ $SCREENSAVER_ENABLED == true ]] || { echo "Screensaver is disabled"; return; }
     echo "Starting screensaver"
     clear
-    ~/.zsh_screensaver.sh
+    ${0:A:h}/.zsh_screensaver.sh
 }
 
 # Function to reset TMOUT when input is detected
