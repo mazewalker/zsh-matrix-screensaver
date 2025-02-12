@@ -2,37 +2,50 @@
 export SCREENSAVER_TIMEOUT=120  # 2 minutes before screensaver triggers
 export SCREENSAVER_ENABLED=true
 
+# Function to reset TMOUT when input is detected
+function reset_idle_timer() {
+    TMOUT=$SCREENSAVER_TIMEOUT
+    # Debug line to verify timer reset (optional, remove in production)
+    # echo "Timer reset: $(date +%H:%M:%S)"
+}
+
+# Capture all keyboard input events
+function preexec() {
+    reset_idle_timer
+}
+
+# Reset timer on prompt display
+function precmd() {
+    reset_idle_timer
+}
+
+# Reset timer on any ZLE event
+function zle-line-init zle-keymap-select zle-line-finish zle-line-pre-redraw {
+    reset_idle_timer
+}
+
 # Idle detection using TMOUT
 function start_screensaver() {
-    echo "start_screensaver called"
+    # Only start if no command is currently running
     if [[ -n $(jobs) ]]; then
-        echo "Jobs are running, screensaver will not start"
+        reset_idle_timer
         return
     fi
     
-    [[ $SCREENSAVER_ENABLED == true ]] || { echo "Screensaver is disabled"; return; }
-    echo "Starting screensaver"
+    [[ $SCREENSAVER_ENABLED == true ]] || { return; }
     clear
     ${0:A:h}/.zsh_screensaver.sh
 }
 
-# Function to reset TMOUT when input is detected
-function reset_idle_timer() {
-    TMOUT=$SCREENSAVER_TIMEOUT
-}
-
-# Reset timer on any keypress
-function zle-keymap-select zle-line-init zle-line-finish {
-    reset_idle_timer
-}
-
 # Hook into ZSH's input system
 autoload -Uz add-zsh-hook
+add-zsh-hook preexec preexec
+add-zsh-hook precmd precmd
 zle -N zle-line-init
 zle -N zle-keymap-select
 zle -N zle-line-finish
-zle -N zle-keypress
+zle -N zle-line-pre-redraw
 
-# Set idle timeout
+# Set initial idle timeout
 TMOUT=$SCREENSAVER_TIMEOUT
 TRAPALRM() { start_screensaver }
