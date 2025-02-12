@@ -1,12 +1,14 @@
 # Configuration
 export SCREENSAVER_TIMEOUT=120  # 2 minutes before screensaver triggers
 export SCREENSAVER_ENABLED=true
+export LAST_ACTIVITY=$(date +%s)
 
 # Function to reset TMOUT when input is detected
 function reset_idle_timer() {
+    LAST_ACTIVITY=$(date +%s)
     TMOUT=$SCREENSAVER_TIMEOUT
     # Debug line to verify timer reset (optional, remove in production)
-    echo "Timer reset: $(date +%H:%M:%S)"
+    # echo "Timer reset: $(date +%H:%M:%S)"
 }
 
 # Capture all keyboard input events
@@ -48,4 +50,14 @@ zle -N zle-line-pre-redraw
 
 # Set initial idle timeout
 TMOUT=$SCREENSAVER_TIMEOUT
-TRAPALRM() { start_screensaver }
+TRAPALRM() {
+    current_time=$(date +%s)
+    idle_time=$((current_time - LAST_ACTIVITY))
+
+    if ((idle_time >= SCREENSAVER_TIMEOUT)); then
+        start_screensaver
+    else
+        # Reset timer for next check
+        TMOUT=$((SCREENSAVER_TIMEOUT - idle_time))
+    fi
+}
