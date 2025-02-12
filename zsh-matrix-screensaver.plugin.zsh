@@ -1,5 +1,5 @@
 # Configuration
-export SCREENSAVER_TIMEOUT=60  # 1 minute before screensaver triggers
+export SCREENSAVER_TIMEOUT=120  # 2 minutes before screensaver triggers
 export SCREENSAVER_ENABLED=true
 
 # Idle detection using TMOUT
@@ -27,11 +27,11 @@ function zle-keymap-select zle-line-init zle-line-finish {
 }
 
 # Hook into ZSH's input system
-# Hook into ZSH's input system
 autoload -Uz add-zsh-hook
 zle -N zle-line-init
 zle -N zle-keymap-select
 zle -N zle-line-finish
+zle -N zle-keypress
 
 # Set idle timeout
 TMOUT=$SCREENSAVER_TIMEOUT
