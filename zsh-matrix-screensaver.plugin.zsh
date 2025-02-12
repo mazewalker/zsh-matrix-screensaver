@@ -6,7 +6,7 @@ export SCREENSAVER_ENABLED=true
 function reset_idle_timer() {
     TMOUT=$SCREENSAVER_TIMEOUT
     # Debug line to verify timer reset (optional, remove in production)
-    # echo "Timer reset: $(date +%H:%M:%S)"
+    echo "Timer reset: $(date +%H:%M:%S)"
 }
 
 # Capture all keyboard input events

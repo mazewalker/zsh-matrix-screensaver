@@ -37,10 +37,6 @@ To update the plugin to the latest version:
 
 ```zsh
 zinit update mazewalker/zsh-matrix-screensaver
-```
-
-Then restart your terminal or source your `.zshrc`:
-```zsh
 source ~/.zshrc
 ```
 
@@ -56,19 +52,8 @@ zinit unload mazewalker/zsh-matrix-screensaver
 
 To completely remove the plugin:
 
-1. First, remove the plugin line from your `.zshrc`:
-```zsh
-# Remove or comment out this line:
-# zinit light mazewalker/zsh-matrix-screensaver
-```
-
-2. Then remove the plugin files:
 ```zsh
 zinit delete mazewalker/zsh-matrix-screensaver
-```
-
-3. Finally, restart your terminal or source your `.zshrc`:
-```zsh
 source ~/.zshrc
 ```
 
