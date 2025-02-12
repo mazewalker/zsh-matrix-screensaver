@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# Contents of .zsh_screensaver.sh
+# Contents of zsh-matrix-screensaver.plugin.zsh
 DEBUG=false
 
 function cleanup {
@@ -9,7 +9,6 @@ function cleanup {
     printf "\033[?1000l"    # Disable mouse reporting
     tput cnorm             # Show cursor
     tput sgr0              # Reset colors
-    exit 0
 }
 
 trap cleanup INT TERM
@@ -19,6 +18,7 @@ function check_quit {
     if read -t 0 -n 1 key; then
         debug_info "Key or mouse event detected (inner loop), cleaning up..."
         cleanup
+        exit 0  # Ensure the script exits after cleanup
     fi
 }
 
@@ -54,9 +54,9 @@ function init_segments {
         local len=$(( RANDOM % 5 + 3 ))  # Random length between 3-7 characters
         local stream=""
         for (( j=0; j<len; j++ )); do
-            stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) + 1 ))]}
+            stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) ))]}
         done
-        local speed=$((RANDOM % 3 + 1))
+        local speed=$(( RANDOM % 3 + 1 ))
         local pos=$(( (RANDOM % TERM_HEIGHT) * -1 - 1 ))
         segments+=( "$col:$pos:$speed:$stream" )
         debug_info "Initialized column $col: stream='$stream' (len=${#stream}), speed=$speed, pos=$pos"
@@ -77,7 +77,7 @@ function update_segments {
     for seg in "${segments[@]}"; do
         check_quit  # Check at each iteration
         # Split seg into col, pos, speed, and stream
-        read col pos speed stream <<< "$seg"
+        read -r col pos speed stream <<< "$seg"
         pos=$(( pos + speed ))
         if (( pos - ${#stream} < TERM_HEIGHT )); then
             new_segments+=( "$col:$pos:$speed:$stream" )
@@ -104,7 +104,7 @@ function update_segments {
                 (( max_len < 2 )) && max_len=2
                 local len=$(( RANDOM % (max_len - 2 + 1) + 3 ))
                 for (( j=0; j<len; j++ )); do
-                    stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) + 1 ))]}
+                    stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) ))]}
                 done
             fi
             local speed=$(( RANDOM % 3 + 1 ))
@@ -121,7 +121,7 @@ function draw_matrix {
     local IFS=":"  # for splitting segments
     for seg in "${segments[@]}"; do
         check_quit  # Check before processing each segment
-        read col pos speed stream <<< "$seg"
+        read -r col pos speed stream <<< "$seg"
         local len=${#stream}
         for (( j=0; j<len && j<TERM_HEIGHT; j++ )); do
             check_quit  # Check before drawing each character
@@ -143,12 +143,6 @@ function draw_matrix {
 
 function start {
     init_segments
-
-    # Hide cursor, clear screen, disable line wrap, and use alternate screen buffer
-    tput civis
-    printf "\033[2J"    # Clear screen
-    printf "\033[?7l"   # Disable line wrap
-    printf "\033[?47h"  # Use alternate screen buffer
 
     while true; do
         {
@@ -179,13 +173,12 @@ function start {
             continue
         }
     done
+    cleanup  # Ensure cleanup is called after exiting the loop
 }
 
 function reset_idle_timer() {
     LAST_ACTIVITY=$(date +%s)
     TMOUT=$SCREENSAVER_TIMEOUT
-    # Debug line to verify timer reset (optional, remove in production)
-    # echo "Timer reset: $(date +%H:%M:%S)"
 }
 
 # Capture all keyboard input events
@@ -205,7 +198,6 @@ function zle-line-init zle-keymap-select zle-line-finish zle-line-pre-redraw {
 
 # Idle detection using TMOUT
 function start_screensaver() {
-    # Only start if no command is currently running
     if [[ -n $(jobs) ]]; then
         reset_idle_timer
         return
@@ -233,8 +225,11 @@ TRAPALRM() {
 
     if ((idle_time >= SCREENSAVER_TIMEOUT)); then
         start_screensaver
+        cleanup  # Ensure cleanup is called after the screensaver starts and exits
     else
-        # Reset timer for next check
         TMOUT=$((SCREENSAVER_TIMEOUT - idle_time))
     fi
 }
+
+# Initialize the last activity time
+LAST_ACTIVITY=$(date +%s)
