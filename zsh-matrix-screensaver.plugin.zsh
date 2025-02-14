@@ -1,7 +1,9 @@
 #!/bin/zsh
 
 # Contents of zsh-matrix-screensaver.plugin.zsh
-DEBUG=false
+DEBUG=true
+export SCREENSAVER_TIMEOUT=10  # 2 minutes before screensaver triggers
+export SCREENSAVER_ENABLED=true
 
 function cleanup {
     printf "\033[?1049l"    # Return from alternate screen buffer
