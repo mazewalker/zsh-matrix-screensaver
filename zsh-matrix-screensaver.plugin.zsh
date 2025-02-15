@@ -124,7 +124,6 @@ function update_segments {
 }
 
 function draw_matrix {
-    return;  # Disable drawing for now
     # Move cursor to top left
     printf "\033[H"
     local IFS=":"  # for splitting segments
@@ -158,7 +157,7 @@ function start {
         {
             # Use stty to make any keypress detectable
             stty -icanon -echo
-            if read -t 0.03 -N 1; then
+            if read -t 0.03 key; then
                 stty icanon echo
                 debug_info "Key detected, cleaning up..."
                 cleanup
