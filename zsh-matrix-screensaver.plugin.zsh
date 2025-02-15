@@ -1,14 +1,24 @@
 #!/bin/zsh
 
-# Contents of zsh-matrix-screensaver.plugin.zsh
-DEBUG=false
-export SCREENSAVER_TIMEOUT=10  # 2 minutes before screensaver triggers
-export SCREENSAVER_ENABLED=true
+# Matrix Screensaver Plugin for Zsh
+# Version: 1.0.0
+# Description: Displays a Matrix-style animation when terminal is idle
 
-function cleanup {
-    printf "\033[?1049l"    # Return from alternate screen buffer
-    printf "\033[?7h"       # Re-enable line wrapping
-    printf "\033[?1000l"    # Disable mouse reporting
+# Configuration
+typeset -g DEBUG=false
+typeset -g SCREENSAVER_TIMEOUT=10  # Timeout in seconds
+typeset -g SCREENSAVER_ENABLED=true
+
+# Global state variables
+typeset -ga segments
+typeset -g TERM_WIDTH
+typeset -g TERM_HEIGHT
+typeset -g LAST_ACTIVITY
+
+function cleanup() {
+    printf '\033[?1049l'    # Return from alternate screen buffer
+    printf '\033[?7h'       # Re-enable line wrapping
+    printf '\033[?1000l'    # Disable mouse reporting
     tput cnorm             # Show cursor
     tput sgr0              # Reset colors
 }
@@ -34,9 +44,6 @@ printf "\033[?1000h"
 # Get terminal size
 TERM_WIDTH=$(tput cols)
 TERM_HEIGHT=$(tput lines)
-
-# Introduce a global segments array:
-segments=()
 
 # Matrix characters (expanded set)
 CHARS=(
@@ -148,14 +155,16 @@ function start {
 
     while true; do
         {
-            # Modified key detection to respond to any key
-            IFS= read -r -s -n 1 -t 0.03 key
-            if [[ -n "$key" ]]; then
+            # Use stty to make any keypress detectable
+            stty -icanon -echo
+            if read -t 0.03 -N 1; then
+                stty icanon echo
                 debug_info "Key detected, cleaning up..."
                 cleanup
                 reset_idle_timer  # Reset timer when animation ends
                 break
             fi
+            stty icanon echo
 
             local new_width=$(tput cols)
             local new_height=$(tput lines)
@@ -176,8 +185,11 @@ function start {
             continue
         }
     done
-    cleanup  # Ensure cleanup is called after exiting the loop
-    reset_idle_timer  # Reset timer when animation ends
+
+    # Ensure proper cleanup and timer reset
+    cleanup
+    stty icanon echo
+    reset_idle_timer
 }
 
 function reset_idle_timer() {
@@ -195,10 +207,11 @@ function precmd() {
     reset_idle_timer
 }
 
-# Reset timer on any ZLE event
-function zle-line-init zle-keymap-select zle-line-finish zle-line-pre-redraw {
-    reset_idle_timer
-}
+# Handle ZLE events
+function zle-line-init() { reset_idle_timer }
+function zle-keymap-select() { reset_idle_timer }
+function zle-line-finish() { reset_idle_timer }
+function zle-line-pre-redraw() { reset_idle_timer }
 
 # Idle detection using TMOUT
 function start_screensaver() {

@@ -1,0 +1,6 @@
+shell=zsh
+enable=all
+source-path=SCRIPTDIR
+disable=SC2034  # Unused variables (common in zsh)
+disable=SC2296  # Parameter expansion in arithmetic context
+disable=SC2154  # Referenced but not assigned
