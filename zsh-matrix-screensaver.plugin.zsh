@@ -143,14 +143,17 @@ function draw_matrix {
 }
 
 function start {
-    tput civis             # Hide cursor - moved here
+    tput civis             # Hide cursor
     init_segments
 
     while true; do
         {
-            if read -t 0 -n 1 key; then
-                debug_info "Key or mouse event detected, cleaning up..."
+            # Modified key detection to respond to any key
+            IFS= read -r -s -n 1 -t 0.03 key
+            if [[ -n "$key" ]]; then
+                debug_info "Key detected, cleaning up..."
                 cleanup
+                reset_idle_timer  # Reset timer when animation ends
                 break
             fi
 
@@ -168,14 +171,13 @@ function start {
             update_segments
             draw_matrix
 
-            # Small sleep to control frame rate
-            sleep 0.03
         } || {
             debug_info "Caught error, continuing..."
             continue
         }
     done
     cleanup  # Ensure cleanup is called after exiting the loop
+    reset_idle_timer  # Reset timer when animation ends
 }
 
 function reset_idle_timer() {
