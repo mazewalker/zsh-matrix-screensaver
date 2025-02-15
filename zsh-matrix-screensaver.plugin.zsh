@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # Contents of zsh-matrix-screensaver.plugin.zsh
-DEBUG=true
+DEBUG=false
 export SCREENSAVER_TIMEOUT=10  # 2 minutes before screensaver triggers
 export SCREENSAVER_ENABLED=true
 
@@ -27,7 +27,6 @@ function check_quit {
 # Switch to alternate screen buffer and save current screen
 printf "\033[?1049h"    # Switch to alternate screen buffer
 printf "\033[?7l"       # Disable line wrapping
-tput civis             # Hide cursor
 
 # Enable mouse reporting for click events
 printf "\033[?1000h"
@@ -144,6 +143,7 @@ function draw_matrix {
 }
 
 function start {
+    tput civis             # Hide cursor - moved here
     init_segments
 
     while true; do
