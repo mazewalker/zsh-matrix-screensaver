@@ -16,13 +16,11 @@ typeset -g TERM_HEIGHT
 typeset -g LAST_ACTIVITY
 
 function cleanup() {
-    tput sgr0              # Reset colors
-    tput cnorm             # Show cursor
+    printf '\033[?1049l'   # First: Return from alternate screen buffer
     printf '\033[?1000l'   # Disable mouse reporting
     printf '\033[?7h'      # Re-enable line wrapping
-    printf '\033[2J'       # Clear screen
-    printf '\033[H'        # Move cursor to home position
-    printf '\033[?1049l'   # Return from alternate screen buffer
+    tput sgr0              # Reset colors
+    tput cnorm             # Show cursor
 }
 
 trap cleanup INT TERM
@@ -38,13 +36,6 @@ function check_quit {
     fi
     return 0  # Continue execution
 }
-
-# Switch to alternate screen buffer and save current screen
-printf "\033[?1049h"    # Switch to alternate screen buffer
-printf "\033[?7l"       # Disable line wrapping
-
-# Enable mouse reporting for click events
-printf "\033[?1000h"
 
 # Get terminal size
 TERM_WIDTH=$(tput cols)
@@ -155,10 +146,14 @@ function draw_matrix {
 }
 
 function start {
-    tput civis             # Hide cursor
-
-    # Configure terminal
+    # Save terminal settings
     original_settings=$(stty -g)
+    
+    # Switch to alternate screen and configure
+    printf '\033[?1049h'   # Switch to alternate screen buffer
+    printf '\033[?7l'      # Disable line wrapping
+    printf '\033[?1000h'   # Enable mouse reporting
+    tput civis             # Hide cursor
     stty -echo -icanon min 0 time 0
 
     init_segments
@@ -168,8 +163,8 @@ function start {
             # Fast non-blocking input check
             if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
                 debug_info "Input detected, cleaning up..."
-                stty "$original_settings"
-                cleanup
+                stty "$original_settings"  # Restore terminal settings first
+                cleanup                    # Then cleanup screen
                 reset_idle_timer
                 zle reset-prompt 2>/dev/null || true
                 return 0
