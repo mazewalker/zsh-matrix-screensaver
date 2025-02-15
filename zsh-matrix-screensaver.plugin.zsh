@@ -27,10 +27,11 @@ trap cleanup INT TERM
 
 # New helper: check if any key or mouse event is detected and quit immediately.
 function check_quit {
-    if read -t 0 -n 1 key; then
+    if IFS= read -r -t 0 -k1 key; then
         debug_info "Key or mouse event detected (inner loop), cleaning up..."
         cleanup
-        exit 0  # Ensure the script exits after cleanup
+        zle reset-prompt 2>/dev/null || true
+        exit 0
     fi
 }
 
@@ -151,23 +152,23 @@ function draw_matrix {
 
 function start {
     tput civis             # Hide cursor
-    init_segments
 
-    # Save original terminal settings
+    # Save and modify terminal settings
     original_settings=$(stty -g)
+    stty raw -echo min 0 time 0
+
+    init_segments
 
     while true; do
         {
-            # Configure terminal for immediate character reading
-            stty -icanon -echo min 0 time 0
-
-            if read -t 0.03 key; then
+            # Read a single character with timeout
+            if IFS= read -r -t 0.03 -k1 key; then
                 debug_info "Key detected, cleaning up..."
-                # Restore original terminal settings before cleanup
-                stty "$original_settings"
+                stty "$original_settings"  # Restore terminal settings
                 cleanup
                 reset_idle_timer
-                return
+                zle reset-prompt 2>/dev/null || true
+                return 0
             fi
 
             local new_width=$(tput cols)
@@ -190,10 +191,11 @@ function start {
         }
     done
 
-    # Ensure proper cleanup
+    # Ensure proper cleanup on any exit path
     stty "$original_settings"
     cleanup
     reset_idle_timer
+    return 0
 }
 
 function reset_idle_timer() {
