@@ -16,11 +16,14 @@ typeset -g TERM_HEIGHT
 typeset -g LAST_ACTIVITY
 
 function cleanup() {
-    printf '\033[?1049l'   # First: Return from alternate screen buffer
-    printf '\033[?1000l'   # Disable mouse reporting
-    printf '\033[?7h'      # Re-enable line wrapping
+    # Clear the alternate screen before switching back
+    printf '\033[2J\033[H'  # Clear screen and move cursor home
+    printf '\033[?1049l'    # Return from alternate screen buffer
+    printf '\033[?1000l'    # Disable mouse reporting
+    printf '\033[?7h'       # Re-enable line wrapping
     tput sgr0              # Reset colors
     tput cnorm             # Show cursor
+    stty "$original_settings" # Restore terminal settings
 }
 
 trap cleanup INT TERM
@@ -146,10 +149,8 @@ function draw_matrix {
 }
 
 function start {
-    # Save terminal settings
+    # Save terminal settings and switch to alternate screen
     original_settings=$(stty -g)
-    
-    # Switch to alternate screen and configure
     printf '\033[?1049h'   # Switch to alternate screen buffer
     printf '\033[?7l'      # Disable line wrapping
     printf '\033[?1000h'   # Enable mouse reporting
@@ -157,43 +158,27 @@ function start {
     stty -echo -icanon min 0 time 0
 
     init_segments
+    local running=true
 
-    while true; do
-        {
-            # Fast non-blocking input check
-            if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
-                debug_info "Input detected, cleaning up..."
-                stty "$original_settings"  # Restore terminal settings first
-                cleanup                    # Then cleanup screen
-                reset_idle_timer
-                zle reset-prompt 2>/dev/null || true
-                return 0
-            fi
+    while [[ "$running" == "true" ]]; do
+        if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
+            debug_info "Input detected, cleaning up..."
+            running=false
+            break
+        fi
 
-            local new_width=$(tput cols)
-            local new_height=$(tput lines)
+        # Rest of your animation code
+        update_segments
+        draw_matrix
 
-            if (( new_width != TERM_WIDTH || new_height != TERM_HEIGHT )); then
-                TERM_WIDTH=$new_width
-                TERM_HEIGHT=$new_height
-                debug_info "Terminal size changed: ${TERM_WIDTH}x${TERM_HEIGHT}"
-                init_segments
-                printf "\033[2J" # Clear the screen on resize
-            fi
-
-            update_segments
-            draw_matrix
-
-        } || {
-            debug_info "Caught error, continuing..."
-            continue
-        }
+        # Short sleep to prevent CPU hogging
+        sleep 0.03
     done
 
-    # Ensure proper cleanup on any exit path
-    stty "$original_settings"
+    # Clean up and exit
     cleanup
     reset_idle_timer
+    zle reset-prompt 2>/dev/null || true
     return 0
 }
 
