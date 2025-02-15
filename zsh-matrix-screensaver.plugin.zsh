@@ -153,18 +153,22 @@ function start {
     tput civis             # Hide cursor
     init_segments
 
+    # Save original terminal settings
+    original_settings=$(stty -g)
+
     while true; do
         {
-            # Use stty to make any keypress detectable
-            stty -icanon -echo
+            # Configure terminal for immediate character reading
+            stty -icanon -echo min 0 time 0
+
             if read -t 0.03 key; then
-                stty icanon echo
                 debug_info "Key detected, cleaning up..."
+                # Restore original terminal settings before cleanup
+                stty "$original_settings"
                 cleanup
-                reset_idle_timer  # Reset timer when animation ends
-                break
+                reset_idle_timer
+                return
             fi
-            stty icanon echo
 
             local new_width=$(tput cols)
             local new_height=$(tput lines)
@@ -186,9 +190,9 @@ function start {
         }
     done
 
-    # Ensure proper cleanup and timer reset
+    # Ensure proper cleanup
+    stty "$original_settings"
     cleanup
-    stty icanon echo
     reset_idle_timer
 }
 
