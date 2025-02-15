@@ -124,6 +124,7 @@ function update_segments {
 }
 
 function draw_matrix {
+    return;  # Disable drawing for now
     # Move cursor to top left
     printf "\033[H"
     local IFS=":"  # for splitting segments
