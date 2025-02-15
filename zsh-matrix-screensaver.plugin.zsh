@@ -16,11 +16,13 @@ typeset -g TERM_HEIGHT
 typeset -g LAST_ACTIVITY
 
 function cleanup() {
-    printf '\033[?1049l'    # Return from alternate screen buffer
-    printf '\033[?7h'       # Re-enable line wrapping
-    printf '\033[?1000l'    # Disable mouse reporting
-    tput cnorm             # Show cursor
     tput sgr0              # Reset colors
+    tput cnorm             # Show cursor
+    printf '\033[?1000l'   # Disable mouse reporting
+    printf '\033[?7h'      # Re-enable line wrapping
+    printf '\033[2J'       # Clear screen
+    printf '\033[H'        # Move cursor to home position
+    printf '\033[?1049l'   # Return from alternate screen buffer
 }
 
 trap cleanup INT TERM
