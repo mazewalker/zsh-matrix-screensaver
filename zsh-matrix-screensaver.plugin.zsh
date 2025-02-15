@@ -8,14 +8,6 @@
 typeset -g SCREENSAVER_TIMEOUT=10  # Timeout in seconds
 typeset -g SCREENSAVER_ENABLED=true
 
-# To enable debugging:
-export MATRIX_SCREENSAVER_DEBUG=true
-
-# To disable debugging:
-export MATRIX_SCREENSAVER_DEBUG=false
-# or
-unset MATRIX_SCREENSAVER_DEBUG
-
 # Remove the static DEBUG variable and add a function to check it dynamically
 function is_debug_enabled() {
     [[ "${MATRIX_SCREENSAVER_DEBUG:-false}" == "true" ]]
