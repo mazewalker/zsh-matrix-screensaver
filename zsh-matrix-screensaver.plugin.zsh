@@ -28,7 +28,7 @@ trap cleanup INT TERM
 # New helper: check if any key or mouse event is detected and quit immediately.
 function check_quit {
     # Check if any input is available without blocking
-    if (( $(({PENDING:-0} + ${#PREBUFFER} + ${#BUFFER})) > 0 )); then
+    if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
         debug_info "Input detected, cleaning up..."
         cleanup
         zle reset-prompt 2>/dev/null || true
@@ -164,7 +164,7 @@ function start {
     while true; do
         {
             # Fast non-blocking input check
-            if (( $(({PENDING:-0} + ${#PREBUFFER} + ${#BUFFER})) > 0 )); then
+            if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
                 debug_info "Input detected, cleaning up..."
                 stty "$original_settings"
                 cleanup
