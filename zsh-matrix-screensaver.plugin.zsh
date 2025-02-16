@@ -126,16 +126,19 @@ function update_segments {
 }
 
 function draw_matrix {
-    local buffer=""
-    local matrix=()
+    # Pre-allocate matrix array with specific size
+    typeset -a matrix
+    matrix=()
     local IFS=":"
 
-    # Initialize empty matrix
+    # Initialize empty matrix with proper size allocation
     for ((y=0; y<TERM_HEIGHT; y++)); do
         matrix[y]=""
+        local line=""
         for ((x=0; x<TERM_WIDTH; x++)); do
-            matrix[y]+=" "
+            line+=" "
         done
+        matrix[y]="$line"
     done
 
     # Build frame in memory
@@ -157,13 +160,15 @@ function draw_matrix {
         done
     done
 
-    # Move cursor to top-left
+    # Move cursor to top-left and clear screen
     printf "\033[H"
 
     # Draw entire frame at once
+    local output=""
     for ((y=0; y<TERM_HEIGHT; y++)); do
-        printf "%s\n" "${matrix[y]}"
+        output+="${matrix[y]}\n"
     done
+    printf "%b" "$output"
 }
 
 function start {
