@@ -3,14 +3,8 @@
 # Ensure functions are loaded in the proper scope
 typeset -g MATRIX_SCREENSAVER_ROOT="${0:A:h}"
 
-# Declare all functions with proper scoping
-typeset -f update_segments
-typeset -f draw_matrix
-typeset -f start
-typeset -f cleanup
-typeset -f check_quit
-typeset -f init_segments
-typeset -f debug_info
+# Remove the typeset -f declarations as they're not needed
+# and can cause issues with function loading
 
 # Matrix Screensaver Plugin for Zsh
 # Version: 1.0.0
@@ -167,7 +161,7 @@ function draw_matrix {
 function start {
     # First check if all required functions are available
     for func in update_segments draw_matrix cleanup init_segments; do
-        if ! typeset -f "$func" > /dev/null; then
+        if ! whence -f "$func" > /dev/null; then
             echo "Error: Required function '$func' not found" >&2
             return 1
         fi
