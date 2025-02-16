@@ -156,6 +156,8 @@ function draw_matrix {
             continue
         fi
 
+        echo "Current segment: $seg"
+
         # Read values with validation
         if ! read -r col pos speed stream <<< "$seg"; then
             debug_info "Error reading segment: $seg"
