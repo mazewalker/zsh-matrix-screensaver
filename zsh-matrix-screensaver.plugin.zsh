@@ -165,7 +165,7 @@ function start {
             echo "Error: Required function '$func' not found" >&2
             return 1
         fi
-    }
+    done
 
     # Save terminal settings and switch to alternate screen
     original_settings=$(stty -g)
