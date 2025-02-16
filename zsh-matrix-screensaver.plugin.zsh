@@ -166,11 +166,12 @@ function start {
         fi
     done
 
-    # Save terminal settings
+    # Save terminal settings and switch to alternate screen
     local original_settings=""
     if [[ -t 0 ]]; then
         original_settings=$(stty -g)
-        stty -echo -icanon min 0 time 0
+        # Make input more responsive and prevent key echoing
+        stty -echo -icanon min 0 time 0 intr undef
     fi
 
     # Switch to alternate buffer (this preserves the original screen content)
@@ -183,7 +184,7 @@ function start {
     local running=true
 
     while [[ "$running" == "true" ]]; do
-        if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
+        if read -t 0.01 -k1 2>/dev/null; then
             debug_info "Input detected, cleaning up..."
             running=false
             break
@@ -192,7 +193,8 @@ function start {
         update_segments || { debug_info "Error in update_segments"; running=false; break; }
         draw_matrix || { debug_info "Error in draw_matrix"; running=false; break; }
 
-        sleep 0.03
+        # Reduced sleep time for better responsiveness
+        sleep 0.01
     done
 
     # Cleanup in reverse order
