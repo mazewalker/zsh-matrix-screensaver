@@ -97,10 +97,10 @@ function update_segments {
     done
     segments=("${new_segments[@]}")
 
-    # For each column, randomly add a new segment (30% chance)
+    # For each column, randomly add a new segment (50% chance)
     for (( col=0; col<TERM_WIDTH; col++ )); do
         check_quit
-        if (( RANDOM % 10 < 3 )); then
+        if (( RANDOM % 10 < 5 )); then
             local stream=""  # declare once for both branches
             # Occasionally (10% chance) add a gap segment instead of normal characters
             if (( RANDOM % 100 < 10 )); then
@@ -117,7 +117,7 @@ function update_segments {
                     stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) ))]}
                 done
             fi
-            local speed=$(( RANDOM % 3 + 1 ))
+            local speed=$(( RANDOM % 5 + 2 ))
             local pos=$(( RANDOM % 5 * -1 - 1 ))  # start just above the screen
             segments+=( "$col:$pos:$speed:$stream" )
             debug_info "Added new segment in column $col: stream='$stream' (len=${#stream}), speed=$speed, pos=$pos"
@@ -126,28 +126,43 @@ function update_segments {
 }
 
 function draw_matrix {
-    # Move cursor to top left
-    printf "\033[H"
-    local IFS=":"  # for splitting segments
+    local buffer=""
+    local matrix=()
+    local IFS=":"
+
+    # Initialize empty matrix
+    for ((y=0; y<TERM_HEIGHT; y++)); do
+        matrix[y]=""
+        for ((x=0; x<TERM_WIDTH; x++)); do
+            matrix[y]+=" "
+        done
+    done
+
+    # Build frame in memory
     for seg in "${segments[@]}"; do
-        check_quit  # Check before processing each segment
         read -r col pos speed stream <<< "$seg"
         local len=${#stream}
-        for (( j=0; j<len && j<TERM_HEIGHT; j++ )); do
-            check_quit  # Check before drawing each character
-            local y=$(( pos - j ))
-            if (( y >= 0 && y < TERM_HEIGHT )); then
+        for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
+            local y=$((pos - j))
+            if ((y >= 0 && y < TERM_HEIGHT)); then
                 local char=${stream:$((j)):1}
-                tput cup $y $col
-                if (( j == 0 )); then
-                    echo -en "\033[1;37m$char"  # White lead
-                elif (( j < 3 )); then
-                    echo -en "\033[1;32m$char"  # Bright green trail
+                if ((j == 0)); then
+                    matrix[y]="${matrix[y]:0:$col}\033[1;37m${char}\033[0m${matrix[y]:$((col+1))}"
+                elif ((j < 3)); then
+                    matrix[y]="${matrix[y]:0:$col}\033[1;32m${char}\033[0m${matrix[y]:$((col+1))}"
                 else
-                    echo -en "\033[0;32m$char"  # Normal green tail
+                    matrix[y]="${matrix[y]:0:$col}\033[0;32m${char}\033[0m${matrix[y]:$((col+1))}"
                 fi
             fi
         done
+    done
+
+    # Move cursor to top-left
+    printf "\033[H"
+
+    # Draw entire frame at once
+    for ((y=0; y<TERM_HEIGHT; y++)); do
+        printf "%s\n" "${matrix[y]}"
     done
 }
 
