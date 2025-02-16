@@ -150,17 +150,17 @@ function draw_matrix {
         # Ensure segment is not empty
         [ -z "$seg" ] && continue
 
-        # # Use read with error checking
-        # if ! read -r col pos speed stream <<< "$seg"; then
-        #     debug_info "Error reading segment: $seg"
+        # Use read with error checking
+        if ! read -r col pos speed stream <<< "$seg"; then
+            debug_info "Error reading segment: $seg"
+            continue
+        fi
+
+        # Validate numeric values
+        # if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
+        #     debug_info "Invalid numeric values in segment: $seg"
         #     continue
         # fi
-
-        # # Validate numeric values
-        # # if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
-        # #     debug_info "Invalid numeric values in segment: $seg"
-        # #     continue
-        # # fi
 
         # debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
         # local len=${#stream}
