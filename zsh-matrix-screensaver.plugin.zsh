@@ -177,51 +177,51 @@ function draw_matrix {
             continue
         fi
 
-        # # Convert to numeric values explicitly with safety checks
-        # col=$(( ${col:-0} ))
-        # pos=$(( ${pos:-0} ))
-        # speed=$(( ${speed:-1} ))
+        # Convert to numeric values explicitly with safety checks
+        col=$(( ${col:-0} ))
+        pos=$(( ${pos:-0} ))
+        speed=$(( ${speed:-1} ))
 
-        # Validate numeric values
-        # if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
-        #     debug_info "Invalid numeric values in segment: $seg"
-        #     continue
-        # fi
+        Validate numeric values
+        if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
+            debug_info "Invalid numeric values in segment: $seg"
+            continue
+        fi
 
-        # debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
-        # local len=${#stream}
-        # for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
-        #     local y=$((pos - j))
-        #     debug_info "  Processing character $j at position y=$y"
+        debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
+        local len=${#stream}
+        for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
+            local y=$((pos - j))
+            debug_info "  Processing character $j at position y=$y"
 
-        #     # Ensure y is within bounds
-        #     if ((y >= 0 && y < TERM_HEIGHT)); then
-        #         local char=${stream:j:1}
-        #         debug_info "    Writing char '$char' at line $y column $col"
+            # Ensure y is within bounds
+            if ((y >= 0 && y < TERM_HEIGHT)); then
+                local char=${stream:j:1}
+                debug_info "    Writing char '$char' at line $y column $col"
 
-        #         # Get current line with bounds checking
-        #         local current_line="${matrix[$y]:-$empty_line}"
+                # Get current line with bounds checking
+                local current_line="${matrix[$y]:-$empty_line}"
 
-        #         # Ensure we don't exceed line length
-        #         if ((col < TERM_WIDTH)); then
-        #             # Create new line with proper ANSI escapes
-        #             local new_line
-        #             if ((j == 0)); then
-        #                 # Leading character (white)
-        #                 new_line="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
-        #             elif ((j < 3)); then
-        #                 # Trailing bright characters (bright green)
-        #                 new_line="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
-        #             else
-        #                 # Rest of the trail (dark green)
-        #                 new_line="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
-        #             fi
+                # Ensure we don't exceed line length
+                if ((col < TERM_WIDTH)); then
+                    # Create new line with proper ANSI escapes
+                    local new_line
+                    if ((j == 0)); then
+                        # Leading character (white)
+                        new_line="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
+                    elif ((j < 3)); then
+                        # Trailing bright characters (bright green)
+                        new_line="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
+                    else
+                        # Rest of the trail (dark green)
+                        new_line="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
+                    fi
 
-        #             # Safely assign new line to matrix
-        #             matrix[$y]="${new_line:0:$TERM_WIDTH}"
-        #         fi
-        #     fi
-        # done
+                    # Safely assign new line to matrix
+                    matrix[$y]="${new_line:0:$TERM_WIDTH}"
+                fi
+            fi
+        done
     done
 
     # Move cursor to top-left and draw frame
