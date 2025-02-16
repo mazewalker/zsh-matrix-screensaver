@@ -80,26 +80,20 @@ function init_segments {
         check_quit  # Listen for event during initialization
         local len=$(( RANDOM % 5 + 3 ))  # Random length between 3-7 characters
         local stream=""
-        if [ $len -gt 0 ]; then  # Only generate stream if we have a positive length
-            for (( j=0; j<len; j++ )); do
-                stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) + 1 ))]}
-            done
-        else
-            len=1  # Ensure at least one character
-            stream=${CHARS[$(( RANDOM % ${#CHARS[@]} ))]}
-        fi
+        for (( j=0; j<len; j++ )); do
+            stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) ))]}
+        done
         local speed=$(( RANDOM % 3 + 1 ))
         local pos=$(( (RANDOM % TERM_HEIGHT) * -1 - 1 ))
         segments+=( "$col:$pos:$speed:$stream" )
         debug_info "Initialized column $col: stream='$stream' (len=${#stream}), speed=$speed, pos=$pos"
     done
+    debug_info "Initialization complete. Total segments: ${#segments[@]}"
 }
 
-# Update the debug_info function
 function debug_info {
     if is_debug_enabled; then
-        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-        echo "[${timestamp}] $1" >> "/tmp/matrix-screensaver-debug.log"
+        echo "$1" >&2
     fi
 }
 
@@ -120,10 +114,10 @@ function update_segments {
     done
     segments=("${new_segments[@]}")
 
-    # For each column, randomly add a new segment (50% chance)
+    # For each column, randomly add a new segment (30% chance)
     for (( col=0; col<TERM_WIDTH; col++ )); do
         check_quit
-        if (( RANDOM % 10 < 5 )); then
+        if (( RANDOM % 10 < 3 )); then
             local stream=""  # declare once for both branches
             # Occasionally (10% chance) add a gap segment instead of normal characters
             if (( RANDOM % 100 < 10 )); then
@@ -140,7 +134,7 @@ function update_segments {
                     stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) ))]}
                 done
             fi
-            local speed=$(( RANDOM % 5 + 2 ))
+            local speed=$(( RANDOM % 3 + 1 ))
             local pos=$(( RANDOM % 5 * -1 - 1 ))  # start just above the screen
             segments+=( "$col:$pos:$speed:$stream" )
             debug_info "Added new segment in column $col: stream='$stream' (len=${#stream}), speed=$speed, pos=$pos"
@@ -154,10 +148,7 @@ function draw_matrix {
     local IFS=":"  # for splitting segments
     for seg in "${segments[@]}"; do
         check_quit  # Check before processing each segment
-        read col pos speed stream <<< "$seg"
-        if [ -z "$stream" ]; then
-            continue  # Skip drawing empty streams
-        fi
+        read -r col pos speed stream <<< "$seg"
         local len=${#stream}
         for (( j=0; j<len && j<TERM_HEIGHT; j++ )); do
             check_quit  # Check before drawing each character
