@@ -149,18 +149,15 @@ function draw_matrix {
     local -a matrix
     matrix=()
 
-    # Initialize empty matrix with spaces
-    local empty_line=""
-    for ((x=0; x<TERM_WIDTH; x++)); do
-        empty_line+=" "
-    done
-
-    # Initialize matrix using array append
+    # Pre-allocate matrix array
     for ((y=0; y<TERM_HEIGHT; y++)); do
-        matrix+=("$empty_line")
+        matrix[y]=""
+        local line=""
+        for ((x=0; x<TERM_WIDTH; x++)); do
+            line+=" "
+        done
+        matrix[y]="$line"
     done
-
-    debug_info "Matrix initialization complete. Array size: ${#matrix[@]}"
 
     # Build frame in memory with bounds checking
     debug_info "Building frame from ${#segments[@]} segments..."
@@ -204,29 +201,26 @@ function draw_matrix {
 }
 
 function start {
-    # Save current terminal state
-    if [[ ! -t 0 ]]; then
-        debug_info "Error: stdin is not a terminal"
+    # Check if stdin is a terminal and we have control of it
+    if [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
+        debug_info "Error: stdin/stdout is not a terminal or no control"
         return 1
     fi
 
-    # First check if all required functions are available
-    for func in update_segments draw_matrix cleanup init_segments; do
-        if ! whence -f "$func" > /dev/null; then
-            echo "Error: Required function '$func' not found" >&2
-            return 1
-        fi
-    done
-
     # Save terminal settings and switch to alternate screen
-    local original_settings=""
-    if [[ -t 0 ]]; then
-        original_settings=$(stty -g)
-        # Configure terminal for immediate key detection
-        stty raw -echo min 0 time 0
-    fi
+    local original_settings
+    original_settings=$(stty -g </dev/tty) || {
+        debug_info "Error: Could not save terminal settings"
+        return 1
+    }
 
-    # Switch to alternate buffer (this preserves the original screen content)
+    # Configure terminal for immediate key detection
+    stty -F /dev/tty raw -echo min 0 time 0 || {
+        debug_info "Error: Could not configure terminal"
+        return 1
+    }
+
+    # Switch to alternate buffer and configure terminal
     printf '\033[?1049h'   # Save current screen and switch to alternate buffer
     printf '\033[?7l'      # Disable line wrapping
     printf '\033[?1000h'   # Enable mouse reporting
@@ -235,12 +229,9 @@ function start {
     init_segments
     local running=true
 
-    # Use file descriptor 3 for reading input
-    exec 3<&0
-
     while [[ "$running" == "true" ]]; do
-        # Check for input with minimal delay
-        if IFS= read -r -t 0 -k 1 -u 3 key; then
+        # Check for input with minimal delay using /dev/tty
+        if read -t 0.001 -k 1 key </dev/tty; then
             debug_info "Input detected, cleaning up..."
             running=false
             break
@@ -249,12 +240,8 @@ function start {
         update_segments || { debug_info "Error in update_segments"; running=false; break; }
         draw_matrix || { debug_info "Error in draw_matrix"; running=false; break; }
 
-        # Use a shorter sleep time
         sleep 0.005
     done
-
-    # Close the file descriptor
-    exec 3<&-
 
     # Cleanup in reverse order
     tput sgr0              # Reset colors
@@ -263,8 +250,8 @@ function start {
     printf '\033[?7h'      # Re-enable line wrapping
     printf '\033[?1049l'   # Restore original screen content
 
-    # Restore terminal settings
-    [[ -n "$original_settings" ]] && stty "$original_settings"
+    # Restore terminal settings using /dev/tty
+    stty -F /dev/tty "$original_settings" || debug_info "Error: Could not restore terminal settings"
     reset_idle_timer
     return 0
 }
