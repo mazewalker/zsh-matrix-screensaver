@@ -150,7 +150,7 @@ function draw_matrix {
         # Ensure segment is not empty
         [ -z "$seg" ] && continue
 
-        echo "Current segment: $seg"
+        debug_info "Current segment: $seg"
 
         # # Ensure segment is not empty and has the correct format
         # if [[ -z "$seg" ]] || [[ ! "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]]; then
