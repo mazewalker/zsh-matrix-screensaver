@@ -237,8 +237,7 @@ function start_screensaver() {
     fi
     
     [[ $SCREENSAVER_ENABLED == true ]] || { return; }
-    clear
-    start  # Call the start function instead of executing the script
+    start  # Start the animation without clearing the screen
 }
 
 # Hook into ZSH's input system
@@ -258,7 +257,7 @@ TRAPALRM() {
 
     if ((idle_time >= SCREENSAVER_TIMEOUT)); then
         start_screensaver
-        cleanup  # Ensure cleanup is called after the screensaver starts and exits
+        # Remove the cleanup call here as it's already handled in the start function
     else
         TMOUT=$((SCREENSAVER_TIMEOUT - idle_time))
     fi
