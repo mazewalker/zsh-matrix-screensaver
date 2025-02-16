@@ -146,12 +146,12 @@ function update_segments {
 
 function draw_matrix {
     debug_info "Starting draw_matrix with TERM_HEIGHT=$TERM_HEIGHT, TERM_WIDTH=$TERM_WIDTH"
-    
+
     # Ensure valid terminal dimensions
     if ((TERM_HEIGHT <= 0 || TERM_WIDTH <= 0)); then
         debug_info "Invalid terminal dimensions: ${TERM_HEIGHT}x${TERM_WIDTH}"
         return 1
-    }
+    fi
 
     # Initialize matrix array with proper declaration
     local -a matrix
@@ -190,7 +190,7 @@ function draw_matrix {
         if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^-?[0-9]+$ ]]; then
             debug_info "Invalid numeric values: col=$col, pos=$pos"
             continue
-        }
+        fi
 
         # Process the validated segment with strict bounds checking
         local len=${#stream}
