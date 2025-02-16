@@ -156,16 +156,16 @@ function draw_matrix {
             continue
         }
 
-        # Then validate numeric values separately
-        if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^[0-9]+$ ]] || [[ ! "$speed" =~ ^[0-9]+$ ]]; then
-            debug_info "Invalid numeric values: col=$col pos=$pos speed=$speed"
-            continue
-        fi
+        # # Then validate numeric values separately
+        # if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^[0-9]+$ ]] || [[ ! "$speed" =~ ^[0-9]+$ ]]; then
+        #     debug_info "Invalid numeric values: col=$col pos=$pos speed=$speed"
+        #     continue
+        # fi
 
-        # Convert to numeric values explicitly with safety checks
-        col=$(( ${col:-0} ))
-        pos=$(( ${pos:-0} ))
-        speed=$(( ${speed:-1} ))
+        # # Convert to numeric values explicitly with safety checks
+        # col=$(( ${col:-0} ))
+        # pos=$(( ${pos:-0} ))
+        # speed=$(( ${speed:-1} ))
 
         # Validate numeric values
         # if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
