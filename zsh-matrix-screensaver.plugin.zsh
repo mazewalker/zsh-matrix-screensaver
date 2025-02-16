@@ -131,11 +131,11 @@ function draw_matrix {
     local -a matrix
     matrix=()
 
-    # # Initialize empty matrix with spaces
-    # local empty_line=""
-    # for ((x=0; x<TERM_WIDTH; x++)); do
-    #     empty_line+=" "
-    # done
+    # Initialize empty matrix with spaces
+    local empty_line=""
+    for ((x=0; x<TERM_WIDTH; x++)); do
+        empty_line+=" "
+    done
 
     # # Create matrix array with the right number of lines
     # for ((y=0; y<TERM_HEIGHT; y++)); do
