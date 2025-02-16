@@ -22,13 +22,11 @@ typeset -g TERM_HEIGHT
 typeset -g LAST_ACTIVITY
 
 function cleanup() {
-    # Clear the alternate screen before switching back
-    printf '\033[2J\033[H'  # Clear screen and move cursor home
-    printf '\033[?1049l'    # Return from alternate screen buffer
-    printf '\033[?1000l'    # Disable mouse reporting
-    printf '\033[?7h'       # Re-enable line wrapping
     tput sgr0              # Reset colors
     tput cnorm             # Show cursor
+    printf '\033[?1000l'   # Disable mouse reporting
+    printf '\033[?7h'      # Re-enable line wrapping
+    printf '\033[?1049l'   # Restore original screen content
 }
 
 trap cleanup INT TERM
@@ -154,7 +152,7 @@ function draw_matrix {
 }
 
 function start {
-    # Check if stdin is a terminal
+    # Save current terminal state
     if [[ ! -t 0 ]]; then
         debug_info "Error: stdin is not a terminal"
         return 1
@@ -168,14 +166,15 @@ function start {
         fi
     done
 
-    # Save terminal settings and switch to alternate screen
+    # Save terminal settings
     local original_settings=""
     if [[ -t 0 ]]; then
         original_settings=$(stty -g)
         stty -echo -icanon min 0 time 0
     fi
 
-    printf '\033[?1049h'   # Switch to alternate screen buffer
+    # Switch to alternate buffer (this preserves the original screen content)
+    printf '\033[?1049h'   # Save current screen and switch to alternate buffer
     printf '\033[?7l'      # Disable line wrapping
     printf '\033[?1000h'   # Enable mouse reporting
     tput civis             # Hide cursor
@@ -196,8 +195,14 @@ function start {
         sleep 0.03
     done
 
-    # Cleanup and restore terminal state
-    cleanup
+    # Cleanup in reverse order
+    tput sgr0              # Reset colors
+    tput cnorm             # Show cursor
+    printf '\033[?1000l'   # Disable mouse reporting
+    printf '\033[?7h'      # Re-enable line wrapping
+    printf '\033[?1049l'   # Restore original screen content
+
+    # Restore terminal settings
     [[ -n "$original_settings" ]] && stty "$original_settings"
     reset_idle_timer
     return 0
