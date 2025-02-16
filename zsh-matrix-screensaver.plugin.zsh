@@ -131,18 +131,16 @@ function draw_matrix {
     # Pre-allocate matrix array with fixed size and explicit indices
     local -a matrix
     matrix=()
-    local IFS=":"
 
-    # Initialize empty matrix with proper indexing
-    debug_info "Initializing matrix array..."
+    # Initialize empty matrix with spaces
+    local empty_line=""
+    for ((x=0; x<TERM_WIDTH; x++)); do
+        empty_line+=" "
+    done
+
+    # Create matrix array with the right number of lines
     for ((y=0; y<TERM_HEIGHT; y++)); do
-        debug_info "Creating line $y of $TERM_HEIGHT"
-        local line=""
-        for ((x=0; x<TERM_WIDTH; x++)); do
-            line+=" "
-        done
-        matrix+=("$line")  # Use array append instead of direct index
-        debug_info "Line $y length: ${#line}"
+        matrix[y]="$empty_line"
     done
     debug_info "Matrix initialization complete. Array size: ${#matrix[@]}"
 
@@ -157,32 +155,31 @@ function draw_matrix {
             local y=$((pos - j))
             debug_info "  Processing character $j at position y=$y"
 
-            # Ensure we're within valid array bounds
             if ((y >= 0 && y < TERM_HEIGHT)); then
                 local char=${stream:$((j)):1}
                 debug_info "    Writing char '$char' at line $y column $col"
-                local current_line="${matrix[y]}"
-                if ((j == 0)); then
-                    # Leading character (white)
-                    matrix[y]="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
-                elif ((j < 3)); then
-                    # Trailing bright characters (bright green)
-                    matrix[y]="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
-                else
-                    # Rest of the trail (dark green)
-                    matrix[y]="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
+                local current_line="${matrix[$y]}"
+
+                # Ensure we don't exceed line length
+                if ((col < TERM_WIDTH)); then
+                    if ((j == 0)); then
+                        # Leading character (white)
+                        matrix[$y]="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
+                    elif ((j < 3)); then
+                        # Trailing bright characters (bright green)
+                        matrix[$y]="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
+                    else
+                        # Rest of the trail (dark green)
+                        matrix[$y]="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
+                    fi
                 fi
             fi
         done
     done
 
-    debug_info "Frame built. Drawing ${#matrix[@]} lines..."
-    # Move cursor to top-left
+    # Move cursor to top-left and draw frame
     printf "\033[H"
-
-    # Draw entire frame at once
     printf "%s\n" "${matrix[@]}"
-    debug_info "Frame drawn."
 }
 
 function start {
