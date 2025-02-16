@@ -127,7 +127,6 @@ function update_segments {
 
 function draw_matrix {
     debug_info "Starting draw_matrix with TERM_HEIGHT=$TERM_HEIGHT, TERM_WIDTH=$TERM_WIDTH"
-
     # Pre-allocate matrix array with fixed size and explicit indices
     local -a matrix
     matrix=()
@@ -140,38 +139,59 @@ function draw_matrix {
 
     # Create matrix array with the right number of lines
     for ((y=0; y<TERM_HEIGHT; y++)); do
-        matrix[y]="$empty_line"
+        matrix[$y]="$empty_line"
     done
     debug_info "Matrix initialization complete. Array size: ${#matrix[@]}"
 
     # Build frame in memory with bounds checking
     debug_info "Building frame from ${#segments[@]} segments..."
     for seg in "${segments[@]}"; do
-        read -r col pos speed stream <<< "$seg"
-        debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
+        # Ensure segment is not empty
+        [ -z "$seg" ] && continue
 
+        # Use read with error checking
+        if ! read -r col pos speed stream <<< "$seg"; then
+            debug_info "Error reading segment: $seg"
+            continue
+        fi
+
+        # Validate numeric values
+        if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
+            debug_info "Invalid numeric values in segment: $seg"
+            continue
+        fi
+
+        debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
         local len=${#stream}
         for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
             local y=$((pos - j))
             debug_info "  Processing character $j at position y=$y"
 
+            # Ensure y is within bounds
             if ((y >= 0 && y < TERM_HEIGHT)); then
-                local char=${stream:$((j)):1}
+                local char=${stream:j:1}
                 debug_info "    Writing char '$char' at line $y column $col"
-                local current_line="${matrix[$y]}"
+
+                # Get current line with bounds checking
+                local current_line="${matrix[$y]:-$empty_line}"
 
                 # Ensure we don't exceed line length
                 if ((col < TERM_WIDTH)); then
+                    # Create new line with proper ANSI escapes
+                    local new_line
                     if ((j == 0)); then
                         # Leading character (white)
-                        matrix[$y]="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
+                        new_line="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
                     elif ((j < 3)); then
                         # Trailing bright characters (bright green)
-                        matrix[$y]="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
+                        new_line="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
                     else
                         # Rest of the trail (dark green)
-                        matrix[$y]="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
+                        new_line="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
                     fi
+
+                    # Safely assign new line to matrix
+                    matrix[$y]="${new_line:0:$TERM_WIDTH}"
                 fi
             fi
         done
@@ -179,7 +199,9 @@ function draw_matrix {
 
     # Move cursor to top-left and draw frame
     printf "\033[H"
-    printf "%s\n" "${matrix[@]}"
+    for ((i=0; i<TERM_HEIGHT && i<${#matrix[@]}; i++)); do
+        printf "%s\n" "${matrix[$i]:-$empty_line}"
+    done
 }
 
 function start {
