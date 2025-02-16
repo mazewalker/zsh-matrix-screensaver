@@ -221,7 +221,7 @@ function start {
     if [[ ! -t 0 ]]; then
         debug_info "Error: stdin is not a terminal"
         return 1
-    }
+    fi
 
     # First check if all required functions are available
     for func in update_segments draw_matrix cleanup init_segments; do
@@ -235,7 +235,7 @@ function start {
     local original_settings=""
     if [[ -t 0 ]]; then
         original_settings=$(stty -g)
-    # Configure terminal for immediate key detection
+        # Configure terminal for immediate key detection
         stty raw -echo min 0 time 0
     fi
 
