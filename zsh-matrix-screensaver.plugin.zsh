@@ -1,5 +1,17 @@
 #!/bin/zsh
 
+# Ensure functions are loaded in the proper scope
+typeset -g MATRIX_SCREENSAVER_ROOT="${0:A:h}"
+
+# Declare all functions with proper scoping
+typeset -f update_segments
+typeset -f draw_matrix
+typeset -f start
+typeset -f cleanup
+typeset -f check_quit
+typeset -f init_segments
+typeset -f debug_info
+
 # Matrix Screensaver Plugin for Zsh
 # Version: 1.0.0
 # Description: Displays a Matrix-style animation when terminal is idle
@@ -153,6 +165,14 @@ function draw_matrix {
 }
 
 function start {
+    # First check if all required functions are available
+    for func in update_segments draw_matrix cleanup init_segments; do
+        if ! typeset -f "$func" > /dev/null; then
+            echo "Error: Required function '$func' not found" >&2
+            return 1
+        fi
+    }
+
     # Save terminal settings and switch to alternate screen
     original_settings=$(stty -g)
     printf '\033[?1049h'   # Switch to alternate screen buffer
@@ -171,15 +191,12 @@ function start {
             break
         fi
 
-        # Rest of your animation code
-        update_segments
-        draw_matrix
+        update_segments || { debug_info "Error in update_segments"; running=false; break; }
+        draw_matrix || { debug_info "Error in draw_matrix"; running=false; break; }
 
-        # Short sleep to prevent CPU hogging
         sleep 0.03
     done
 
-    # Clean up and exit
     cleanup
     reset_idle_timer
     zle reset-prompt 2>/dev/null || true
