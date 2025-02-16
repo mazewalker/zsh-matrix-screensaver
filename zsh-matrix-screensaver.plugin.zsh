@@ -1,14 +1,10 @@
 #!/bin/zsh
-
-# Ensure functions are loaded in the proper scope
-typeset -g MATRIX_SCREENSAVER_ROOT="${0:A:h}"
-
-# Remove the typeset -f declarations as they're not needed
-# and can cause issues with function loading
-
 # Matrix Screensaver Plugin for Zsh
 # Version: 1.0.0
 # Description: Displays a Matrix-style animation when terminal is idle
+
+# Ensure functions are loaded in the proper scope
+typeset -g MATRIX_SCREENSAVER_ROOT="${0:A:h}"
 
 # Configuration
 typeset -g SCREENSAVER_TIMEOUT=10  # Timeout in seconds
@@ -162,7 +158,7 @@ function start {
     if [[ ! -t 0 ]]; then
         debug_info "Error: stdin is not a terminal"
         return 1
-    }
+    fi
 
     # First check if all required functions are available
     for func in update_segments draw_matrix cleanup init_segments; do
@@ -173,8 +169,7 @@ function start {
     done
 
     # Save terminal settings and switch to alternate screen
-    # Only try to get terminal settings if stdin is a terminal
-    original_settings=""
+    local original_settings=""
     if [[ -t 0 ]]; then
         original_settings=$(stty -g)
         stty -echo -icanon min 0 time 0
@@ -201,7 +196,7 @@ function start {
         sleep 0.03
     done
 
-    # Cleanup with terminal settings check
+    # Cleanup and restore terminal state
     cleanup
     [[ -n "$original_settings" ]] && stty "$original_settings"
     reset_idle_timer
