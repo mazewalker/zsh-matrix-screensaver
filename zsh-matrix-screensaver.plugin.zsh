@@ -146,7 +146,6 @@ function update_segments {
 
 function draw_matrix {
     debug_info "Starting draw_matrix with TERM_HEIGHT=$TERM_HEIGHT, TERM_WIDTH=$TERM_WIDTH"
-    # Pre-allocate matrix array with fixed size and explicit indices
     local -a matrix
     matrix=()
 
@@ -170,74 +169,30 @@ function draw_matrix {
         [ -z "$seg" ] && continue
 
         debug_info "Current segment: $seg"
-        seg="1 2 3 4"  # This would work
-
-        # Ensure segment is not empty and has the correct format
-        if [[ -z "$seg" ]] || [[ ! "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]]; then
+        
+        # Validate segment format and read values
+        if [[ ! "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]]; then
             debug_info "Invalid segment format: $seg"
             continue
         fi
 
-        # Read values with validation
-        if ! read -r col pos speed stream <<< "$seg"; then
-            debug_info "Error reading segment: $seg"
-            continue
-        fi
+        local col pos speed stream
+        IFS=':' read -r col pos speed stream <<< "$seg"
 
-        # Ensure all required values are present
-        if [[ -z "$col" ]] || [[ -z "$pos" ]] || [[ -z "$speed" ]] || [[ -z "$stream" ]]; then
-            debug_info "Missing values in segment: col=$col pos=$pos speed=$speed stream=$stream"
-            continue
-        fi
-
-        # Then validate numeric values separately
-        if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^[0-9]+$ ]] || [[ ! "$speed" =~ ^[0-9]+$ ]]; then
-            debug_info "Invalid numeric values: col=$col pos=$pos speed=$speed"
-            continue
-        fi
-
-        # Convert to numeric values explicitly with safety checks
-        col=$(( ${col:-0} ))
-        pos=$(( ${pos:-0} ))
-        speed=$(( ${speed:-1} ))
-
-        Validate numeric values
-        if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
-            debug_info "Invalid numeric values in segment: $seg"
-            continue
-        fi
-
-        debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
+        # Process the validated segment
         local len=${#stream}
         for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
             local y=$((pos - j))
-            debug_info "  Processing character $j at position y=$y"
-
-            # Ensure y is within bounds
-            if ((y >= 0 && y < TERM_HEIGHT)); then
+            if ((y >= 0 && y < TERM_HEIGHT)); do
                 local char=${stream:j:1}
-                debug_info "    Writing char '$char' at line $y column $col"
-
-                # Get current line with bounds checking
-                local current_line="${matrix[$y]:-$empty_line}"
-
-                # Ensure we don't exceed line length
                 if ((col < TERM_WIDTH)); then
-                    # Create new line with proper ANSI escapes
-                    local new_line
                     if ((j == 0)); then
-                        # Leading character (white)
-                        new_line="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
+                        matrix[y]="${matrix[y]:0:$col}\033[1;37m${char}\033[0m${matrix[y]:$((col+1))}"
                     elif ((j < 3)); then
-                        # Trailing bright characters (bright green)
-                        new_line="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
+                        matrix[y]="${matrix[y]:0:$col}\033[1;32m${char}\033[0m${matrix[y]:$((col+1))}"
                     else
-                        # Rest of the trail (dark green)
-                        new_line="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
+                        matrix[y]="${matrix[y]:0:$col}\033[0;32m${char}\033[0m${matrix[y]:$((col+1))}"
                     fi
-
-                    # Safely assign new line to matrix
-                    matrix[$y]="${new_line:0:$TERM_WIDTH}"
                 fi
             fi
         done
@@ -245,9 +200,7 @@ function draw_matrix {
 
     # Move cursor to top-left and draw frame
     printf "\033[H"
-    for ((i=0; i<TERM_HEIGHT && i<${#matrix[@]}; i++)); do
-        printf "%s\n" "${matrix[$i]:-$empty_line}"
-    done
+    printf "%s\n" "${matrix[@]}"
 }
 
 function start {
