@@ -137,11 +137,11 @@ function draw_matrix {
         empty_line+=" "
     done
 
-    # # Create matrix array with the right number of lines
-    # for ((y=0; y<TERM_HEIGHT; y++)); do
-    #     matrix[$y]="$empty_line"
-    # done
-    # debug_info "Matrix initialization complete. Array size: ${#matrix[@]}"
+    # Create matrix array with the right number of lines
+    for ((y=0; y<TERM_HEIGHT; y++)); do
+        matrix[$y]="$empty_line"
+    done
+    debug_info "Matrix initialization complete. Array size: ${#matrix[@]}"
 
     # # Build frame in memory with bounds checking
     # debug_info "Building frame from ${#segments[@]} segments..."
