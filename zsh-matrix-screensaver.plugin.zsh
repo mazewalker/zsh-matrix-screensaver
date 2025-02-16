@@ -170,8 +170,8 @@ function start {
     local original_settings=""
     if [[ -t 0 ]]; then
         original_settings=$(stty -g)
-        # Make input more responsive and prevent key echoing
-        stty -echo -icanon min 0 time 0 intr undef
+        # Configure terminal for immediate key detection
+        stty raw -echo min 0 time 0
     fi
 
     # Switch to alternate buffer (this preserves the original screen content)
@@ -183,8 +183,12 @@ function start {
     init_segments
     local running=true
 
+    # Use file descriptor 3 for reading input
+    exec 3<&0
+
     while [[ "$running" == "true" ]]; do
-        if read -t 0.01 -k1 2>/dev/null; then
+        # Check for input with minimal delay
+        if IFS= read -r -t 0 -k 1 -u 3 key; then
             debug_info "Input detected, cleaning up..."
             running=false
             break
@@ -193,9 +197,12 @@ function start {
         update_segments || { debug_info "Error in update_segments"; running=false; break; }
         draw_matrix || { debug_info "Error in draw_matrix"; running=false; break; }
 
-        # Reduced sleep time for better responsiveness
-        sleep 0.01
+        # Use a shorter sleep time
+        sleep 0.005
     done
+
+    # Close the file descriptor
+    exec 3<&-
 
     # Cleanup in reverse order
     tput sgr0              # Reset colors

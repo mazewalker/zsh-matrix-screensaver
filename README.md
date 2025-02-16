@@ -221,6 +221,70 @@ echo "\ue0b0 \ue0b1 \ue0b2 \ue0b3"
 
 You should see special characters instead of boxes or question marks.
 
+## Debugging
+
+### Enabling Debug Mode
+
+To enable debug output:
+
+```bash
+# Enable debugging in your current session
+export MATRIX_SCREENSAVER_DEBUG=true
+
+# Or add to your .zshrc for persistent debugging
+echo 'export MATRIX_SCREENSAVER_DEBUG=true' >> ~/.zshrc
+```
+
+### Debug Log Location
+
+Debug messages are written to stderr. To capture debug output to a file:
+
+```bash
+# Redirect stderr to a log file
+exec 2>>/tmp/matrix-screensaver-debug.log
+
+# Monitor debug output in real-time
+tail -f /tmp/matrix-screensaver-debug.log
+```
+
+### Available Debug Information
+
+The debug output includes:
+- Segment initialization details
+- Terminal size changes
+- Input detection events
+- Animation frame updates
+- Cleanup operations
+- Error conditions
+
+### Troubleshooting Common Issues
+
+1. **Screen Not Clearing Properly**
+   ```bash
+   # Check if terminal supports alternate buffer
+   echo $TERM
+   # Should be xterm-256color or similar
+   ```
+
+2. **Input Detection Issues**
+   ```bash
+   # Verify terminal settings
+   stty -a
+   ```
+
+3. **Font Problems**
+   ```bash
+   # Test character rendering
+   echo -e "\033[1;32mMatrix Test\033[0m"
+   ```
+
+### Development Tips
+
+- Set `SCREENSAVER_TIMEOUT=5` for faster testing
+- Use `MATRIX_SCREENSAVER_DEBUG=true` during development
+- Test in different terminal emulators
+- Check terminal capabilities with `infocmp`
+
 ## License
 
 MIT License
