@@ -157,10 +157,10 @@ function draw_matrix {
         fi
 
         # Validate numeric values
-        if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
-            debug_info "Invalid numeric values in segment: $seg"
-            continue
-        fi
+        # if ! [[ "$col" =~ ^[0-9]+$ ]] || ! [[ "$pos" =~ ^[0-9]+$ ]] || ! [[ "$speed" =~ ^[0-9.]+$ ]]; then
+        #     debug_info "Invalid numeric values in segment: $seg"
+        #     continue
+        # fi
 
         debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
         local len=${#stream}
