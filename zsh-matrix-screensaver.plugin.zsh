@@ -126,49 +126,63 @@ function update_segments {
 }
 
 function draw_matrix {
+    debug_info "Starting draw_matrix with TERM_HEIGHT=$TERM_HEIGHT, TERM_WIDTH=$TERM_WIDTH"
+
     # Pre-allocate matrix array with fixed size and explicit indices
     local -a matrix
-    matrix=()  # Clear array first
+    matrix=()
     local IFS=":"
 
     # Initialize empty matrix with proper indexing
+    debug_info "Initializing matrix array..."
     for ((y=0; y<TERM_HEIGHT; y++)); do
+        debug_info "Creating line $y of $TERM_HEIGHT"
         local line=""
         for ((x=0; x<TERM_WIDTH; x++)); do
             line+=" "
         done
-        # Explicitly set array index
-        matrix[y]="$line"
+        matrix+=("$line")  # Use array append instead of direct index
+        debug_info "Line $y length: ${#line}"
     done
+    debug_info "Matrix initialization complete. Array size: ${#matrix[@]}"
 
     # Build frame in memory with bounds checking
+    debug_info "Building frame from ${#segments[@]} segments..."
     for seg in "${segments[@]}"; do
         read -r col pos speed stream <<< "$seg"
+        debug_info "Processing segment: col=$col pos=$pos speed=$speed stream_length=${#stream}"
+
         local len=${#stream}
         for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
             local y=$((pos - j))
+            debug_info "  Processing character $j at position y=$y"
+
             # Ensure we're within valid array bounds
             if ((y >= 0 && y < TERM_HEIGHT)); then
                 local char=${stream:$((j)):1}
+                debug_info "    Writing char '$char' at line $y column $col"
+                local current_line="${matrix[y]}"
                 if ((j == 0)); then
                     # Leading character (white)
-                    matrix[y]="${matrix[y]:0:$col}\033[1;37m${char}\033[0m${matrix[y]:$((col+1))}"
+                    matrix[y]="${current_line:0:$col}\033[1;37m${char}\033[0m${current_line:$((col+1))}"
                 elif ((j < 3)); then
                     # Trailing bright characters (bright green)
-                    matrix[y]="${matrix[y]:0:$col}\033[1;32m${char}\033[0m${matrix[y]:$((col+1))}"
+                    matrix[y]="${current_line:0:$col}\033[1;32m${char}\033[0m${current_line:$((col+1))}"
                 else
                     # Rest of the trail (dark green)
-                    matrix[y]="${matrix[y]:0:$col}\033[0;32m${char}\033[0m${matrix[y]:$((col+1))}"
+                    matrix[y]="${current_line:0:$col}\033[0;32m${char}\033[0m${current_line:$((col+1))}"
                 fi
             fi
         done
     done
 
+    debug_info "Frame built. Drawing ${#matrix[@]} lines..."
     # Move cursor to top-left
     printf "\033[H"
 
     # Draw entire frame at once
     printf "%s\n" "${matrix[@]}"
+    debug_info "Frame drawn."
 }
 
 function start {
