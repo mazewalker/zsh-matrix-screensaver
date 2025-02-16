@@ -147,8 +147,8 @@ function draw_matrix {
     # Build frame in memory with bounds checking
     debug_info "Building frame from ${#segments[@]} segments..."
     for seg in "${segments[@]}"; do
-        # # Ensure segment is not empty
-        # [ -z "$seg" ] && continue
+        # Ensure segment is not empty
+        [ -z "$seg" ] && continue
 
         # # Use read with error checking
         # if ! read -r col pos speed stream <<< "$seg"; then
