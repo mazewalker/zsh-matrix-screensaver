@@ -16,6 +16,22 @@ function is_debug_enabled() {
     [[ "$MATRIX_SCREENSAVER_DEBUG" == "true" ]]
 }
 
+# Add this near the top of the file, after the configuration variables
+
+function init_debug_logging() {
+    if [[ "$MATRIX_SCREENSAVER_DEBUG" == "true" ]]; then
+        local log_file="/tmp/matrix-screensaver-debug.log"
+        # Create or clear the log file
+        echo "=== Matrix Screensaver Debug Log Started $(date) ===" > "$log_file"
+        # Ensure the log file is writable
+        chmod 600 "$log_file"
+        debug_info "Debug logging initialized"
+    fi
+}
+
+# Call this right after the function definition
+init_debug_logging
+
 # Global state variables
 typeset -ga segments
 typeset -g TERM_WIDTH
@@ -75,9 +91,11 @@ function init_segments {
     debug_info "Initialization complete. Total segments: ${#segments[@]}"
 }
 
+# Update the debug_info function
 function debug_info {
     if is_debug_enabled; then
-        echo "$1" >&2
+        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        echo "[${timestamp}] $1" >> "/tmp/matrix-screensaver-debug.log"
     fi
 }
 

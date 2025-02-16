@@ -225,54 +225,68 @@ You should see special characters instead of boxes or question marks.
 
 ### Enabling Debug Mode
 
-To enable debug output:
+Add to your `.zshrc` to enable debug mode:
 
 ```bash
-# Enable debugging in your current session
+# Enable debug logging
 export MATRIX_SCREENSAVER_DEBUG=true
-
-# Or add to your .zshrc for persistent debugging
-echo 'export MATRIX_SCREENSAVER_DEBUG=true' >> ~/.zshrc
 ```
 
 ### Debug Log Location
 
-Debug messages are written to stderr. To capture debug output to a file:
+Debug logs are written to `/tmp/matrix-screensaver-debug.log`. You can:
 
 ```bash
-# Redirect stderr to a log file
-exec 2>>/tmp/matrix-screensaver-debug.log
-
 # Monitor debug output in real-time
 tail -f /tmp/matrix-screensaver-debug.log
 ```
 
 ### Available Debug Information
 
-The debug output includes:
+The debug log includes:
+- Timestamp for each entry
 - Segment initialization details
-- Terminal size changes
+- Terminal size information
 - Input detection events
 - Animation frame updates
 - Cleanup operations
 - Error conditions
 
+### Debug Log Format
+
+Each log entry follows this format:
+```
+[YYYY-MM-DD HH:MM:SS] Message
+```
+
+Example log entries:
+```
+[2025-02-16 10:30:15] Debug logging initialized
+[2025-02-16 10:30:15] Initializing segments with TERM_WIDTH: 80, TERM_HEIGHT: 24
+[2025-02-16 10:30:15] Added new segment in column 5: stream='ｱｲｳ' (len=3), speed=2, pos=-1
+```
+
 ### Troubleshooting Common Issues
 
-1. **Screen Not Clearing Properly**
+1. **No Debug Output**
+   - Verify debug mode is enabled: `echo $MATRIX_SCREENSAVER_DEBUG`
+   - Check log file permissions: `ls -l /tmp/matrix-screensaver-debug.log`
+   - Ensure log directory is writable: `touch /tmp/test && rm /tmp/test`
+
+2. **Screen Not Clearing Properly**
    ```bash
    # Check if terminal supports alternate buffer
    echo $TERM
    # Should be xterm-256color or similar
    ```
 
-2. **Input Detection Issues**
+3. **Input Detection Issues**
    ```bash
    # Verify terminal settings
    stty -a
    ```
 
-3. **Font Problems**
+4. **Font Problems**
    ```bash
    # Test character rendering
    echo -e "\033[1;32mMatrix Test\033[0m"
@@ -282,6 +296,7 @@ The debug output includes:
 
 - Set `SCREENSAVER_TIMEOUT=5` for faster testing
 - Use `MATRIX_SCREENSAVER_DEBUG=true` during development
+- Monitor logs in a separate terminal window
 - Test in different terminal emulators
 - Check terminal capabilities with `infocmp`
 
