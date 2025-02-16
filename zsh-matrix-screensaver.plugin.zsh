@@ -164,35 +164,35 @@ function draw_matrix {
 
     # Build frame in memory with bounds checking
     debug_info "Building frame from ${#segments[@]} segments..."
+    local IFS=':'  # Set IFS for read operation
+
     for seg in "${segments[@]}"; do
         # Ensure segment is not empty
-        [ -z "$seg" ] && continue
+        [[ -z "$seg" ]] && continue
 
         debug_info "Current segment: $seg"
         
         # Validate segment format and read values
-        if [[ ! "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]]; then
+        [[ "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]] || {
             debug_info "Invalid segment format: $seg"
             continue
-        fi
+        }
 
         local col pos speed stream
-        IFS=':' read -r col pos speed stream <<< "$seg"
+        read -r col pos speed stream <<< "$seg"
 
         # Process the validated segment
         local len=${#stream}
         for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
             local y=$((pos - j))
-            if ((y >= 0 && y < TERM_HEIGHT)); do
-                local char=${stream:j:1}
-                if ((col < TERM_WIDTH)); then
-                    if ((j == 0)); then
-                        matrix[y]="${matrix[y]:0:$col}\033[1;37m${char}\033[0m${matrix[y]:$((col+1))}"
-                    elif ((j < 3)); then
-                        matrix[y]="${matrix[y]:0:$col}\033[1;32m${char}\033[0m${matrix[y]:$((col+1))}"
-                    else
-                        matrix[y]="${matrix[y]:0:$col}\033[0;32m${char}\033[0m${matrix[y]:$((col+1))}"
-                    fi
+            if ((y >= 0 && y < TERM_HEIGHT && col < TERM_WIDTH)); then
+                local char="${stream:$j:1}"
+                if ((j == 0)); then
+                    matrix[$y]="${matrix[$y]:0:$col}\033[1;37m${char}\033[0m${matrix[$y]:$((col+1))}"
+                elif ((j < 3)); then
+                    matrix[$y]="${matrix[$y]:0:$col}\033[1;32m${char}\033[0m${matrix[$y]:$((col+1))}"
+                else
+                    matrix[$y]="${matrix[$y]:0:$col}\033[0;32m${char}\033[0m${matrix[$y]:$((col+1))}"
                 fi
             fi
         done
