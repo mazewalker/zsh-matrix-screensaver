@@ -192,7 +192,7 @@ function draw_matrix {
                     fi
 
                     # Safely assign new line to matrix
-                    matrix[$y]="${new_line:0:$TERM_WIDTH}"
+                    # matrix[$y]="${new_line:0:$TERM_WIDTH}"
                 fi
             fi
         done
