@@ -150,25 +150,25 @@ function draw_matrix {
         # Ensure segment is not empty
         [ -z "$seg" ] && continue
 
-        # Ensure segment is not empty and has the correct format
-        if [[ -z "$seg" ]] || [[ ! "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]]; then
-            debug_info "Invalid segment format: $seg"
-            continue
-        fi
-
         echo "Current segment: $seg"
 
-        # Read values with validation
-        if ! read -r col pos speed stream <<< "$seg"; then
-            debug_info "Error reading segment: $seg"
-            continue
-        fi
+        # # Ensure segment is not empty and has the correct format
+        # if [[ -z "$seg" ]] || [[ ! "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]]; then
+        #     debug_info "Invalid segment format: $seg"
+        #     continue
+        # fi
 
-        # Ensure all required values are present
-        if [[ -z "$col" ]] || [[ -z "$pos" ]] || [[ -z "$speed" ]] || [[ -z "$stream" ]]; then
-            debug_info "Missing values in segment: col=$col pos=$pos speed=$speed stream=$stream"
-            continue
-        fi
+        # # Read values with validation
+        # if ! read -r col pos speed stream <<< "$seg"; then
+        #     debug_info "Error reading segment: $seg"
+        #     continue
+        # fi
+
+        # # Ensure all required values are present
+        # if [[ -z "$col" ]] || [[ -z "$pos" ]] || [[ -z "$speed" ]] || [[ -z "$stream" ]]; then
+        #     debug_info "Missing values in segment: col=$col pos=$pos speed=$speed stream=$stream"
+        #     continue
+        # fi
 
         # # Then validate numeric values separately
         # if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^[0-9]+$ ]] || [[ ! "$speed" =~ ^[0-9]+$ ]]; then
