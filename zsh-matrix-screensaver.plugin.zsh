@@ -179,7 +179,13 @@ function start {
     local running=true
 
     while [[ "$running" == "true" ]]; do
+        # Use local variable to store input state
+        local has_input=false
         if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
+            has_input=true
+        fi
+
+        if [[ "$has_input" == "true" ]]; then
             debug_info "Input detected, cleaning up..."
             running=false
             break
@@ -191,9 +197,10 @@ function start {
         sleep 0.03
     done
 
+    # Ensure cleanup happens only once
     cleanup
+    stty "$original_settings"  # Restore terminal settings
     reset_idle_timer
-    zle reset-prompt 2>/dev/null || true
     return 0
 }
 
