@@ -80,15 +80,19 @@ function init_segments {
         check_quit  # Listen for event during initialization
         local len=$(( RANDOM % 5 + 3 ))  # Random length between 3-7 characters
         local stream=""
-        for (( j=0; j<len; j++ )); do
-            stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) ))]}
-        done
+        if [ $len -gt 0 ]; then  # Only generate stream if we have a positive length
+            for (( j=0; j<len; j++ )); do
+                stream+=${CHARS[$(( (RANDOM % ${#CHARS[@]}) + 1 ))]}
+            done
+        else
+            len=1  # Ensure at least one character
+            stream=${CHARS[$(( RANDOM % ${#CHARS[@]} ))]}
+        fi
         local speed=$(( RANDOM % 3 + 1 ))
         local pos=$(( (RANDOM % TERM_HEIGHT) * -1 - 1 ))
         segments+=( "$col:$pos:$speed:$stream" )
         debug_info "Initialized column $col: stream='$stream' (len=${#stream}), speed=$speed, pos=$pos"
     done
-    debug_info "Initialization complete. Total segments: ${#segments[@]}"
 }
 
 # Update the debug_info function
@@ -145,74 +149,31 @@ function update_segments {
 }
 
 function draw_matrix {
-    debug_info "Starting draw_matrix with TERM_HEIGHT=$TERM_HEIGHT, TERM_WIDTH=$TERM_WIDTH"
-
-    # Ensure valid terminal dimensions
-    if ((TERM_HEIGHT <= 0 || TERM_WIDTH <= 0)); then
-        debug_info "Invalid terminal dimensions: ${TERM_HEIGHT}x${TERM_WIDTH}"
-        return 1
-    fi
-
-    # Initialize matrix array with proper declaration
-    local -a matrix
-    typeset -g matrix
-
-    # Pre-allocate matrix array with bounds checking
-    for ((y=0; y<TERM_HEIGHT; y++)); do
-        matrix[$y]=""
-        local line=""
-        for ((x=0; x<TERM_WIDTH; x++)); do
-            line+=" "
-        done
-        matrix[$y]="$line"
-    done
-
-    # Build frame in memory with bounds checking
-    debug_info "Building frame from ${#segments[@]} segments..."
-    local IFS=':'  # Set IFS for read operation
-
+    # Move cursor to top left
+    printf "\033[H"
+    local IFS=":"  # for splitting segments
     for seg in "${segments[@]}"; do
-        # Ensure segment is not empty
-        [[ -z "$seg" ]] && continue
-
-        debug_info "Current segment: $seg"
-        
-        # Validate segment format and read values
-        [[ "$seg" =~ ^[0-9]+:[0-9-]+:[0-9]+:.*$ ]] || {
-            debug_info "Invalid segment format: $seg"
-            continue
-        }
-
-        local col pos speed stream
-        read -r col pos speed stream <<< "$seg"
-
-        # Ensure col and pos are numeric
-        if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^-?[0-9]+$ ]]; then
-            debug_info "Invalid numeric values: col=$col, pos=$pos"
-            continue
+        check_quit  # Check before processing each segment
+        read col pos speed stream <<< "$seg"
+        if [ -z "$stream" ]; then
+            continue  # Skip drawing empty streams
         fi
-
-        # Process the validated segment with strict bounds checking
         local len=${#stream}
-        for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
-            local y=$((pos - j))
-            if ((y >= 0 && y < TERM_HEIGHT && col >= 0 && col < TERM_WIDTH)); then
-                local char="${stream:$j:1}"
-                if ((j == 0)); then
-                    matrix[$y]="${matrix[$y]:0:$col}\033[1;37m${char}\033[0m${matrix[$y]:$((col+1))}"
-                elif ((j < 3)); then
-                    matrix[$y]="${matrix[$y]:0:$col}\033[1;32m${char}\033[0m${matrix[$y]:$((col+1))}"
+        for (( j=0; j<len && j<TERM_HEIGHT; j++ )); do
+            check_quit  # Check before drawing each character
+            local y=$(( pos - j ))
+            if (( y >= 0 && y < TERM_HEIGHT )); then
+                local char=${stream:$((j)):1}
+                tput cup $y $col
+                if (( j == 0 )); then
+                    echo -en "\033[1;37m$char"  # White lead
+                elif (( j < 3 )); then
+                    echo -en "\033[1;32m$char"  # Bright green trail
                 else
-                    matrix[$y]="${matrix[$y]:0:$col}\033[0;32m${char}\033[0m${matrix[$y]:$((col+1))}"
+                    echo -en "\033[0;32m$char"  # Normal green tail
                 fi
             fi
         done
-    done
-
-    # Move cursor to top-left and draw frame
-    printf "\033[H"
-    for ((y=0; y<TERM_HEIGHT; y++)); do
-        printf "%s\n" "${matrix[$y]}"
     done
 }
 
