@@ -126,33 +126,38 @@ function update_segments {
 }
 
 function draw_matrix {
-    # Pre-allocate matrix array with specific size
+    # Pre-allocate matrix array with fixed size and explicit indices
     local -a matrix
+    matrix=()  # Clear array first
     local IFS=":"
-    local y x line
 
-    # Initialize empty matrix with proper size allocation
+    # Initialize empty matrix with proper indexing
     for ((y=0; y<TERM_HEIGHT; y++)); do
-        line=""
+        local line=""
         for ((x=0; x<TERM_WIDTH; x++)); do
             line+=" "
         done
-        matrix+=("$line")
+        # Explicitly set array index
+        matrix[y]="$line"
     done
 
-    # Build frame in memory
+    # Build frame in memory with bounds checking
     for seg in "${segments[@]}"; do
         read -r col pos speed stream <<< "$seg"
         local len=${#stream}
         for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
             local y=$((pos - j))
+            # Ensure we're within valid array bounds
             if ((y >= 0 && y < TERM_HEIGHT)); then
                 local char=${stream:$((j)):1}
                 if ((j == 0)); then
+                    # Leading character (white)
                     matrix[y]="${matrix[y]:0:$col}\033[1;37m${char}\033[0m${matrix[y]:$((col+1))}"
                 elif ((j < 3)); then
+                    # Trailing bright characters (bright green)
                     matrix[y]="${matrix[y]:0:$col}\033[1;32m${char}\033[0m${matrix[y]:$((col+1))}"
                 else
+                    # Rest of the trail (dark green)
                     matrix[y]="${matrix[y]:0:$col}\033[0;32m${char}\033[0m${matrix[y]:$((col+1))}"
                 fi
             fi
