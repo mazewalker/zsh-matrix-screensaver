@@ -33,7 +33,6 @@ function cleanup() {
     printf '\033[?7h'       # Re-enable line wrapping
     tput sgr0              # Reset colors
     tput cnorm             # Show cursor
-    stty "$original_settings" # Restore terminal settings
 }
 
 trap cleanup INT TERM
@@ -43,8 +42,8 @@ function check_quit {
     # Check if any input is available without blocking
     if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
         debug_info "Input detected, cleaning up..."
-        cleanup
-        zle reset-prompt 2>/dev/null || true
+        #cleanup
+        #zle reset-prompt 2>/dev/null || true
         return 1  # Signal to exit
     fi
     return 0  # Continue execution
@@ -159,6 +158,12 @@ function draw_matrix {
 }
 
 function start {
+    # Check if stdin is a terminal
+    if [[ ! -t 0 ]]; then
+        debug_info "Error: stdin is not a terminal"
+        return 1
+    }
+
     # First check if all required functions are available
     for func in update_segments draw_matrix cleanup init_segments; do
         if ! whence -f "$func" > /dev/null; then
@@ -168,24 +173,23 @@ function start {
     done
 
     # Save terminal settings and switch to alternate screen
-    original_settings=$(stty -g)
+    # Only try to get terminal settings if stdin is a terminal
+    original_settings=""
+    if [[ -t 0 ]]; then
+        original_settings=$(stty -g)
+        stty -echo -icanon min 0 time 0
+    fi
+
     printf '\033[?1049h'   # Switch to alternate screen buffer
     printf '\033[?7l'      # Disable line wrapping
     printf '\033[?1000h'   # Enable mouse reporting
     tput civis             # Hide cursor
-    stty -echo -icanon min 0 time 0
 
     init_segments
     local running=true
 
     while [[ "$running" == "true" ]]; do
-        # Use local variable to store input state
-        local has_input=false
         if (( PENDING + ${#PREBUFFER} + ${#BUFFER} )); then
-            has_input=true
-        fi
-
-        if [[ "$has_input" == "true" ]]; then
             debug_info "Input detected, cleaning up..."
             running=false
             break
@@ -197,9 +201,9 @@ function start {
         sleep 0.03
     done
 
-    # Ensure cleanup happens only once
+    # Cleanup with terminal settings check
     cleanup
-    stty "$original_settings"  # Restore terminal settings
+    [[ -n "$original_settings" ]] && stty "$original_settings"
     reset_idle_timer
     return 0
 }
