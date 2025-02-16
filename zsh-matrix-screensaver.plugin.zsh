@@ -146,17 +146,25 @@ function update_segments {
 
 function draw_matrix {
     debug_info "Starting draw_matrix with TERM_HEIGHT=$TERM_HEIGHT, TERM_WIDTH=$TERM_WIDTH"
-    local -a matrix
-    matrix=()
+    
+    # Ensure valid terminal dimensions
+    if ((TERM_HEIGHT <= 0 || TERM_WIDTH <= 0)); then
+        debug_info "Invalid terminal dimensions: ${TERM_HEIGHT}x${TERM_WIDTH}"
+        return 1
+    }
 
-    # Pre-allocate matrix array
+    # Initialize matrix array with proper declaration
+    local -a matrix
+    typeset -g matrix
+
+    # Pre-allocate matrix array with bounds checking
     for ((y=0; y<TERM_HEIGHT; y++)); do
-        matrix[y]=""
+        matrix[$y]=""
         local line=""
         for ((x=0; x<TERM_WIDTH; x++)); do
             line+=" "
         done
-        matrix[y]="$line"
+        matrix[$y]="$line"
     done
 
     # Build frame in memory with bounds checking
@@ -178,11 +186,17 @@ function draw_matrix {
         local col pos speed stream
         read -r col pos speed stream <<< "$seg"
 
-        # Process the validated segment
+        # Ensure col and pos are numeric
+        if [[ ! "$col" =~ ^[0-9]+$ ]] || [[ ! "$pos" =~ ^-?[0-9]+$ ]]; then
+            debug_info "Invalid numeric values: col=$col, pos=$pos"
+            continue
+        }
+
+        # Process the validated segment with strict bounds checking
         local len=${#stream}
         for ((j=0; j<len && j<TERM_HEIGHT; j++)); do
             local y=$((pos - j))
-            if ((y >= 0 && y < TERM_HEIGHT && col < TERM_WIDTH)); then
+            if ((y >= 0 && y < TERM_HEIGHT && col >= 0 && col < TERM_WIDTH)); then
                 local char="${stream:$j:1}"
                 if ((j == 0)); then
                     matrix[$y]="${matrix[$y]:0:$col}\033[1;37m${char}\033[0m${matrix[$y]:$((col+1))}"
@@ -197,7 +211,9 @@ function draw_matrix {
 
     # Move cursor to top-left and draw frame
     printf "\033[H"
-    printf "%s\n" "${matrix[@]}"
+    for ((y=0; y<TERM_HEIGHT; y++)); do
+        printf "%s\n" "${matrix[$y]}"
+    done
 }
 
 function start {
@@ -205,7 +221,7 @@ function start {
     if [[ ! -t 0 ]]; then
         debug_info "Error: stdin is not a terminal"
         return 1
-    fi
+    }
 
     # First check if all required functions are available
     for func in update_segments draw_matrix cleanup init_segments; do
