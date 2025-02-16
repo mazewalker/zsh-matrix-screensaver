@@ -9,10 +9,11 @@ typeset -g MATRIX_SCREENSAVER_ROOT="${0:A:h}"
 # Configuration
 typeset -g SCREENSAVER_TIMEOUT=10  # Timeout in seconds
 typeset -g SCREENSAVER_ENABLED=true
+typeset -g MATRIX_SCREENSAVER_DEBUG=false
 
 # Remove the static DEBUG variable and add a function to check it dynamically
 function is_debug_enabled() {
-    [[ "${MATRIX_SCREENSAVER_DEBUG:-false}" == "true" ]]
+    [[ "$MATRIX_SCREENSAVER_DEBUG" == "true" ]]
 }
 
 # Global state variables
